@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetTruth — The Real Math Behind Every Bet</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f9fc;
+  --white: #ffffff;
+  --panel: #ffffff;
+  --border: #e8edf3;
+  --border2: #d0d9e4;
+  --text: #1a2332;
+  --dim: #6b7c93;
+  --dimmer: #9aaabb;
+  --green: #00a854;
+  --green2: #e6f7ee;
+  --red: #e8304a;
+  --red2: #fdeef1;
+  --orange: #f59e0b;
+  --orange2: #fef3cd;
+  --blue: #1a6ef5;
+  --blue2: #e8f0fe;
+  --purple: #7c3aed;
+  --purple2: #ede9fe;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; }
+
+/* ══ TICKER STRIP ══ */
+#ticker {
+  background: var(--text);
+  color: rgba(255,255,255,0.7);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.5px;
+}
+.ticker-track {
+  display: flex;
+  gap: 40px;
+  animation: tickscroll 30s linear infinite;
+  white-space: nowrap;
+  padding-left: 100%;
+}
+@keyframes tickscroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.tick-item { display: flex; gap: 8px; align-items: center; }
+.tick-name { color: rgba(255,255,255,0.5); }
+.tick-val { color: #fff; }
+.tick-up { color: #00d68f; }
+.tick-down { color: #ff6b6b; }
+
+/* ══ HEADER ══ */
+#header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.logo-name {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.logo-name span { color: var(--red); }
+.logo-tag {
+  font-size: 0.6rem;
+  color: var(--dimmer);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.header-nav {
+  display: flex;
+  gap: 4px;
+}
+.nav-item {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--dim);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--blue2); color: var(--blue); font-weight: 600; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.currency-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+}
+.truth-badge {
+  background: var(--red);
+  color: white;
+  font-size: 0.6rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: var(--mono);
+}
+
+/* ══ MAIN GRID ══ */
+#main {
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  gap: 0;
+  min-height: calc(100vh - 88px);
+}
+
+/* ══ LEFT SIDEBAR ══ */
+#sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--white);
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.sb-section { margin-bottom: 8px; }
+.sb-title {
+  padding: 6px 16px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dimmer);
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+.sb-item {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  font-size: 0.82rem;
+  color: var(--dim);
+  font-weight: 500;
+}
+.sb-item:hover { background: var(--bg); color: var(--text); border-left-color: var(--border2); }
+.sb-item.active { background: var(--blue2); color: var(--blue); border-left-color: var(--blue); font-weight: 600; }
+.sb-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+/* House edge indicator */
+.house-strip {
+  margin: 12px 16px;
+  background: var(--red2);
+  border: 1px solid rgba(232,48,74,0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.hs-label { font-size: 0.6rem; color: var(--red); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; font-family: var(--mono); }
+.hs-val { font-family: var(--display); font-size: 1.6rem; font-weight: 800; color: var(--red); line-height: 1; }
+.hs-sub { font-size: 0.62rem; color: var(--dim); margin-top: 2px; }
+
+/* ══ CENTER ══ */
+#center {
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+/* Hero stats bar */
+#stats-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.stat-cell {
+  padding: 4px 16px;
+  border-right: 1px solid var(--border);
+}
+.stat-cell:first-child { padding-left: 0; }
+.stat-cell:last-child { border-right: none; }
+.sc-label { font-size: 0.62rem; color: var(--dimmer); letter-spacing: 1px; text-transform: uppercase; font-family: var(--mono); margin-bottom: 3px; }
+.sc-val { font-family: var(--display); font-size: 1.3rem; font-weight: 700; color: var(--text); line-height: 1; }
+.sc-sub { font-size: 0.65rem; margin-top: 2px; }
+.sc-sub.up { color: var(--green); }
+.sc-sub.down { color: var(--red); }
+.sc-sub.warn { color: var(--orange); }
+
+/* Views */
+.view { display: none; padding: 20px; }
+.view.active { display: block; }
+
+/* Section title */
+.section-title {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.card-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Input styles */
+.input-group { margin-bottom: 12px; }
+.input-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--dim);
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+}
+.inp {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.inp:focus { border-color: var(--blue); background: var(--white); }
+.inp-row { display: flex; gap: 8px; }
+.inp-row .inp { flex: 1; }
+
+select.inp { cursor: pointer; }
+
+/* Buttons */
+.btn {
+  padding: 9px 18px;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+}
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: #1558d0; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,110,245,0.3); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #c5223c; }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #008844; }
+.btn-ghost { background: var(--bg); color: var(--dim); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+/* Result boxes */
+.result-box {
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 14px;
+  display: none;
+}
+.result-box.visible { display: block; }
+.rb-danger { background: var(--red2); border: 1px solid rgba(232,48,74,0.25); }
+.rb-success { background: var(--green2); border: 1px solid rgba(0,168,84,0.25); }
+.rb-warn { background: var(--orange2); border: 1px solid rgba(245,158,11,0.25); }
+.rb-info { background: var(--blue2); border: 1px solid rgba(26,110,245,0.2); }
+
+.rb-title { font-weight: 700; font-size: 0.8rem; margin-bottom: 10px; }
+.rb-danger .rb-title { color: var(--red); }
+.rb-success .rb-title { color: var(--green); }
+.rb-warn .rb-title { color: var(--orange); }
+.rb-info .rb-title { color: var(--blue); }
+
+.rb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.rb-stat {
+  background: white;
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+.rb-stat-val { font-family: var(--display); font-size: 1.3rem; font-weight: 700; line-height: 1; }
+.rb-stat-label { font-size: 0.6rem; color: var(--dim); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; font-family: var(--mono); }
+
+/* Odds table */
+.odds-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.odds-table th {
+  background: var(--bg);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--dim);
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  font-family: var(--mono);
+}
+.odds-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.odds-table tr:hover td { background: var(--bg); }
+.odds-table tr:last-child td { border-bottom: none; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
+.badge-red { background: var(--red2); color: var(--red); }
+.badge-green { background: var(--green2); color: var(--green); }
+.badge-orange { background: var(--orange2); color: var(--orange); }
+
+/* Progress bar */
+.progress-wrap { margin: 8px 0; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.68rem; margin-bottom: 4px; }
+.progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.fill-red { background: linear-gradient(90deg, var(--red), #ff6b6b); }
+.fill-green { background: linear-gradient(90deg, var(--green), #00d68f); }
+.fill-blue { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+.fill-orange { background: linear-gradient(90deg, var(--orange), #fbbf24); }
+
+/* Chart canvas */
+canvas { display: block; width: 100% !important; }
+
+/* Accumulator builder */
+.acca-leg {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 7px;
+  border: 1px solid var(--border);
+}
+.acca-odds { font-family: var(--mono); font-weight: 600; color: var(--text); }
+.acca-prob { font-size: 0.7rem; color: var(--dim); }
+.remove-btn { background: none; border: none; color: var(--dimmer); cursor: pointer; font-size: 1rem; padding: 0 4px; }
+.remove-btn:hover { color: var(--red); }
+
+/* Simulator chart */
+.sim-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
+.sim-bar-row { display: flex; align-items: center; gap: 8px; font-size: 0.68rem; }
+.sim-bar-label { width: 60px; color: var(--dim); text-align: right; flex-shrink: 0; font-family: var(--mono); }
+.sim-bar { flex: 1; height: 20px; border-radius: 4px; position: relative; display: flex; align-items: center; padding: 0 8px; font-size: 0.65rem; font-weight: 600; color: white; overflow: hidden; }
+.sim-bar-bg { position: absolute; inset: 0; border-radius: 4px; }
+
+/* Truth meter */
+.truth-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.tm-icon { font-size: 1.1rem; flex-shrink: 0; }
+.tm-text { flex: 1; font-size: 0.78rem; color: var(--text); line-height: 1.4; }
+.tm-text strong { color: var(--red); }
+.tm-score { font-family: var(--mono); font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ══ RIGHT PANEL ══ */
+#right-panel {
+  border-left: 1px solid var(--border);
+  background: var(--white);
+  overflow-y: auto;
+  padding: 16px;
+}
+.rp-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.rp-title {
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--text);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Bookmaker margins */
+.bm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.bm-row:last-child { border-bottom: none; }
+.bm-name { font-weight: 600; color: var(--text); }
+.bm-margin { font-family: var(--mono); font-weight: 700; }
+.bm-high { color: var(--red); }
+.bm-med { color: var(--orange); }
+.bm-low { color: var(--green); }
+
+/* Fact cards */
+.fact-card {
+  background: var(--bg);
+  border-radius: 7px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--blue);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.fact-card.red { border-left-color: var(--red); }
+.fact-card.orange { border-left-color: var(--orange); }
+.fact-card.green { border-left-color: var(--green); }
+.fact-num { font-family: var(--display); font-size: 1.4rem; font-weight: 800; display: block; line-height: 1; margin-bottom: 3px; }
+
+/* Footer */
+#footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 12px 24px;
+  font-size: 0.65rem;
+  color: var(--dimmer);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  #main { grid-template-columns: 1fr; }
+  #sidebar, #right-panel { display: none; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  #stats-bar { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-track" id="ticker-track"></div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="logo">
+    <div class="logo-name">Bet<span>Truth</span></div>
+    <div class="logo-tag">Financial Literacy · Real Math · Global</div>
+  </div>
+  <div class="header-nav">
+    <div class="nav-item active" onclick="switchView('odds',this)">Odds Truth</div>
+    <div class="nav-item" onclick="switchView('accumulator',this)">Accumulator</div>
+    <div class="nav-item" onclick="switchView('simulator',this)">Simulator</div>
+    <div class="nav-item" onclick="switchView('tracker',this)">Bet Tracker</div>
+    <div class="nav-item" onclick="switchView('education',this)">Education</div>
+  </div>
+  <div class="header-right">
+    <select class="currency-select" id="currency-select" onchange="updateCurrency()">
+      <option value="NGN">₦ NGN</option>
+      <option value="USD">$ USD</option>
+      <option value="GBP">£ GBP</option>
+      <option value="KES">KES</option>
+      <option value="ZAR">R ZAR</option>
+      <option value="GHS">GHS</option>
+      <option value="EUR">€ EUR</option>
+      <option value="INR">₹ INR</option>
+    </select>
+    <div class="truth-badge">TRUTH ENGINE</div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div id="stats-bar">
+  <div class="stat-cell">
+    <div class="sc-label">Bookmaker Edge</div>
+    <div class="sc-val" id="sb-edge">~8%</div>
+    <div class="sc-sub warn">Average per bet</div>
+  </div>
+  <div class="stat-cell">
+    <div class="sc-label">Long-term Win Rate</div>
+    <div class="sc-val" id="sb-winrate">~3%</div>
+    <div class="sc-sub down">of bettors profitable</div>
+  </div>
+  <div class="stat-cell">
+    <div class="sc-label">Accumulator Return</div>
+    <div class="sc-val">~2%</div>
+    <div class="sc-sub down">Long-term avg return</div>
+  </div>
+  <div class="stat-cell">
+    <div class="sc-label">Expected Value</div>
+    <div class="sc-val" id="sb-ev">-₦8</div>
+    <div class="sc-sub down">Per ₦100 staked</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-section">
+      <div class="sb-title">Tools</div>
+      <div class="sb-item active" onclick="switchView('odds',this)"><span class="sb-icon">🎯</span>Odds Calculator</div>
+      <div class="sb-item" onclick="switchView('accumulator',this)"><span class="sb-icon">🔗</span>Accumulator Trap</div>
+      <div class="sb-item" onclick="switchView('simulator',this)"><span class="sb-icon">📉</span>Loss Simulator</div>
+      <div class="sb-item" onclick="switchView('tracker',this)"><span class="sb-icon">📊</span>Bet Tracker</div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-title">Learn</div>
+      <div class="sb-item" onclick="switchView('education',this)"><span class="sb-icon">📚</span>How Odds Work</div>
+      <div class="sb-item" onclick="switchView('education',this)"><span class="sb-icon">🧮</span>Expected Value</div>
+      <div class="sb-item" onclick="switchView('education',this)"><span class="sb-icon">💡</span>Better Alternatives</div>
+    </div>
+
+    <!-- House edge widget -->
+    <div class="house-strip">
+      <div class="hs-label">BOOKMAKER TAKES</div>
+      <div class="hs-val" id="house-edge-disp">₦8</div>
+      <div class="hs-sub">of every ₦100 you bet</div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Global Markets</div>
+      <div class="sb-item"><span class="sb-icon">🇳🇬</span>Nigeria · Bet9ja</div>
+      <div class="sb-item"><span class="sb-icon">🇬🇧</span>UK · Bet365</div>
+      <div class="sb-item"><span class="sb-icon">🇺🇸</span>USA · DraftKings</div>
+      <div class="sb-item"><span class="sb-icon">🇰🇪</span>Kenya · SportPesa</div>
+      <div class="sb-item"><span class="sb-icon">🇿🇦</span>South Africa · Hollywoodbets</div>
+      <div class="sb-item"><span class="sb-icon">🇮🇳</span>India · Dream11</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+
+    <!-- ODDS TRUTH VIEW -->
+    <div id="odds-view" class="view active">
+      <div class="section-title">🎯 Odds Truth Calculator</div>
+
+      <div class="grid-2">
+        <!-- Converter -->
+        <div class="card">
+          <div class="card-title">📐 Odds Converter & True Probability</div>
+          <div class="input-group">
+            <label class="input-label">Odds Format</label>
+            <select class="inp" id="odds-format" onchange="convertOdds()">
+              <option value="decimal">Decimal (e.g. 2.50) — Europe/Nigeria</option>
+              <option value="fractional">Fractional (e.g. 3/2) — UK</option>
+              <option value="american">American (e.g. +150) — USA</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Enter Odds</label>
+            <input class="inp" id="odds-input" value="2.50" oninput="convertOdds()" placeholder="e.g. 2.50"/>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Stake Amount (<span class="currency-symbol">₦</span>)</label>
+            <input class="inp" id="stake-input" value="1000" oninput="convertOdds()" type="number"/>
+          </div>
+
+          <div class="result-box rb-info visible" id="odds-result">
+            <div class="rb-title">📊 The Real Numbers</div>
+            <div class="rb-grid" id="odds-grid"></div>
+          </div>
+        </div>
+
+        <!-- Bookmaker margin -->
+        <div class="card">
+          <div class="card-title">🏦 Bookmaker Margin Detector</div>
+          <p style="font-size:0.75rem;color:var(--dim);margin-bottom:12px">Enter the odds for both sides of a market (e.g. Home Win & Away Win) to reveal how much the bookmaker is taking.</p>
+          <div class="input-group">
+            <label class="input-label">Outcome 1 Odds (Decimal)</label>
+            <input class="inp" id="margin-o1" value="1.90" oninput="calcMargin()" placeholder="e.g. 1.90"/>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Outcome 2 Odds (Decimal)</label>
+            <input class="inp" id="margin-o2" value="1.90" oninput="calcMargin()" placeholder="e.g. 1.90"/>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Outcome 3 Odds (optional — for 3-way markets)</label>
+            <input class="inp" id="margin-o3" value="" oninput="calcMargin()" placeholder="e.g. 3.50 (Draw)"/>
+          </div>
+          <div class="result-box rb-warn visible" id="margin-result">
+            <div class="rb-title">💰 Margin Analysis</div>
+            <div id="margin-text"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Odds comparison table -->
+      <div class="card">
+        <div class="card-title">🌍 Global Bookmaker Margin Comparison</div>
+        <p style="font-size:0.75rem;color:var(--dim);margin-bottom:12px">The margin is how much the bookmaker keeps from every bet. The higher it is, the worse the deal for you.</p>
+        <table class="odds-table">
+          <thead>
+            <tr>
+              <th>Bookmaker</th>
+              <th>Country</th>
+              <th>Avg Margin</th>
+              <th>Per ₦100 bet</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody id="bm-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- EV explainer -->
+      <div class="card">
+        <div class="card-title">🧮 Expected Value Calculator</div>
+        <p style="font-size:0.75rem;color:var(--dim);margin-bottom:12px">Expected Value (EV) is the most important concept in betting math. It tells you exactly how much you win or lose per bet on average.</p>
+        <div class="grid-2">
+          <div>
+            <div class="input-group">
+              <label class="input-label">Your Estimated Win Probability (%)</label>
+              <input class="inp" id="ev-prob" value="45" oninput="calcEV()" type="number" min="1" max="99"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Decimal Odds Offered</label>
+              <input class="inp" id="ev-odds" value="2.00" oninput="calcEV()"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Stake (<span class="currency-symbol">₦</span>)</label>
+              <input class="inp" id="ev-stake" value="1000" oninput="calcEV()" type="number"/>
+            </div>
+          </div>
+          <div class="result-box visible" id="ev-result" style="margin-top:0">
+            <div class="rb-title" id="ev-title">EV Result</div>
+            <div id="ev-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCUMULATOR VIEW -->
+    <div id="accumulator-view" class="view">
+      <div class="section-title">🔗 Accumulator Trap Analyzer</div>
+
+      <div class="card">
+        <div class="card-title">⚠️ Why Accumulators Always Lose — The Math</div>
+        <p style="font-size:0.75rem;color:var(--dim);margin-bottom:14px">Bookmakers love accumulators because the margin compounds with every leg you add. Add your selections below to see the brutal truth.</p>
+
+        <div id="acca-legs"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="addAccaLeg()">+ Add Selection</button>
+          <button class="btn btn-primary" onclick="calcAcca()">📊 Analyze Accumulator</button>
+          <button class="btn btn-ghost" onclick="clearAcca()">Clear All</button>
+        </div>
+
+        <div class="result-box rb-danger" id="acca-result">
+          <div class="rb-title">💀 Accumulator Truth</div>
+          <div class="rb-grid" id="acca-grid"></div>
+          <div id="acca-breakdown" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- Pre-built examples -->
+      <div class="card">
+        <div class="card-title">📋 Real World Examples — Load & See</div>
+        <div class="grid-3">
+          <div style="background:var(--bg);border-radius:8px;padding:12px;cursor:pointer;border:1px solid var(--border)" onclick="loadAccaExample('double')">
+            <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px">Double (2 games)</div>
+            <div style="font-size:0.72rem;color:var(--dim)">2 selections at 2.0 each</div>
+            <div style="font-size:0.72rem;color:var(--red);margin-top:4px">Real win%: 25%</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:12px;cursor:pointer;border:1px solid var(--border)" onclick="loadAccaExample('5fold')">
+            <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px">5-Fold Accumulator</div>
+            <div style="font-size:0.72rem;color:var(--dim)">5 selections at 1.9 each</div>
+            <div style="font-size:0.72rem;color:var(--red);margin-top:4px">Real win%: 3.9%</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:12px;cursor:pointer;border:1px solid var(--border)" onclick="loadAccaExample('10fold')">
+            <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px">10-Fold "Banker"</div>
+            <div style="font-size:0.72rem;color:var(--dim)">10 selections at 1.8 each</div>
+            <div style="font-size:0.72rem;color:var(--red);margin-top:4px">Real win%: 0.15%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULATOR VIEW -->
+    <div id="simulator-view" class="view">
+      <div class="section-title">📉 Long-Term Loss Simulator</div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Configure Your Scenario</div>
+        <div class="grid-2">
+          <div>
+            <div class="input-group">
+              <label class="input-label">Daily Bet Amount (<span class="currency-symbol">₦</span>)</label>
+              <input class="inp" id="sim-daily" value="2000" type="number"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Average Odds (Decimal)</label>
+              <input class="inp" id="sim-odds" value="2.00" type="number" step="0.1"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Your Win Rate (%)</label>
+              <input class="inp" id="sim-winrate" value="45" type="number"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Timeframe</label>
+              <select class="inp" id="sim-period">
+                <option value="30">1 Month (30 days)</option>
+                <option value="90">3 Months (90 days)</option>
+                <option value="180">6 Months (180 days)</option>
+                <option value="365" selected>1 Year (365 days)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="input-group">
+              <label class="input-label">Savings Interest Rate (% yearly)</label>
+              <input class="inp" id="sim-saverate" value="12" type="number"/>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Investment Return (% yearly)</label>
+              <input class="inp" id="sim-investrate" value="20" type="number"/>
+            </div>
+            <div style="margin-top:8px">
+              <button class="btn btn-primary" style="width:100%" onclick="runSimulator()">▶ Run Simulation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-box rb-danger" id="sim-result">
+        <div class="rb-title">📊 Simulation Results</div>
+        <div class="rb-grid" id="sim-stats" style="margin-bottom:16px"></div>
+        <div class="section-title" style="font-size:0.85rem;margin-bottom:10px">Where Would Your Money Be?</div>
+        <div class="sim-bar-wrap" id="sim-bars"></div>
+        <div style="margin-top:14px;padding:12px;background:white;border-radius:8px">
+          <canvas id="sim-chart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- BET TRACKER VIEW -->
+    <div id="tracker-view" class="view">
+      <div class="section-title">📊 Honest Bet Tracker</div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">➕ Log a Bet</div>
+          <div class="input-group">
+            <label class="input-label">Description</label>
+            <input class="inp" id="bet-desc" placeholder="e.g. Man City to win"/>
+          </div>
+          <div class="inp-row" style="margin-bottom:10px">
+            <div style="flex:1">
+              <label class="input-label">Stake (<span class="currency-symbol">₦</span>)</label>
+              <input class="inp" id="bet-stake" type="number" placeholder="1000"/>
+            </div>
+            <div style="flex:1">
+              <label class="input-label">Odds</label>
+              <input class="inp" id="bet-odds" type="number" placeholder="2.50" step="0.1"/>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Result</label>
+            <select class="inp" id="bet-result">
+              <option value="pending">Pending</option>
+              <option value="won">Won ✅</option>
+              <option value="lost">Lost ❌</option>
+              <option value="void">Void</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="addBet()">Log Bet</button>
+            <button class="btn btn-ghost" onclick="clearBets()">Clear All</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📈 Your Reality Check</div>
+          <div id="tracker-stats">
+            <div style="text-align:center;padding:20px;color:var(--dimmer);font-size:0.8rem">Log some bets to see your real stats</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Bet History</div>
+        <div id="bet-history">
+          <div style="text-align:center;padding:20px;color:var(--dimmer);font-size:0.8rem">No bets logged yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDUCATION VIEW -->
+    <div id="education-view" class="view">
+      <div class="section-title">📚 Financial Literacy — The Truth About Betting</div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🧮 How Bookmaker Odds Actually Work</div>
+          <div class="truth-meter" id="truth-meter-1"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💡 Smarter Alternatives to Betting</div>
+          <div id="alternatives"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📖 The Math They Don't Want You To Know</div>
+        <div id="math-lessons"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+
+    <!-- Bookmaker margins -->
+    <div class="rp-card">
+      <div class="rp-title">🏦 Bookmaker Margins</div>
+      <div id="bm-sidebar"></div>
+    </div>
+
+    <!-- Key facts -->
+    <div class="rp-card">
+      <div class="rp-title">⚡ Global Betting Facts</div>
+      <div class="fact-card red">
+        <span class="fact-num">97%</span>
+        of sports bettors lose money long-term
+      </div>
+      <div class="fact-card orange">
+        <span class="fact-num">60M</span>
+        Nigerians bet daily — ₦600B market
+      </div>
+      <div class="fact-card red">
+        <span class="fact-num">8%</span>
+        average bookmaker edge per bet placed
+      </div>
+      <div class="fact-card green">
+        <span class="fact-num">10%</span>
+        average annual return investing same money in index funds
+      </div>
+    </div>
+
+    <!-- Quick calc -->
+    <div class="rp-card">
+      <div class="rp-title">⚡ Quick Loss Calculator</div>
+      <div class="input-group">
+        <label class="input-label">I bet <span class="currency-symbol">₦</span> per day</label>
+        <input class="inp" id="quick-amount" type="number" value="500" oninput="quickCalc()"/>
+      </div>
+      <div id="quick-result" style="font-size:0.78rem;margin-top:10px;line-height:1.8;color:var(--text)"></div>
+    </div>
+
+    <!-- Responsible gambling -->
+    <div class="rp-card" style="background:var(--blue2);border-color:rgba(26,110,245,0.2)">
+      <div class="rp-title" style="color:var(--blue)">🛡️ Need Help?</div>
+      <div style="font-size:0.72rem;color:var(--text);line-height:1.6">
+        <div style="margin-bottom:6px"><strong>Nigeria:</strong> NLRC Responsible Gambling</div>
+        <div style="margin-bottom:6px"><strong>UK:</strong> GamCare — 0808 8020 133</div>
+        <div style="margin-bottom:6px"><strong>USA:</strong> NCPG — 1-800-522-4700</div>
+        <div style="margin-bottom:6px"><strong>Global:</strong> gamblingtherapy.org</div>
+        <div style="margin-top:8px;padding:8px;background:white;border-radius:6px;font-size:0.68rem;color:var(--dim)">
+          Gambling should be entertainment, not income. Set limits. Know when to stop.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div id="footer">
+  BetTruth is a financial literacy tool. We do not promote, facilitate, or endorse gambling. All calculations are for educational purposes only. |
+  Data shown represents statistical averages across global markets. Individual results vary. |
+  If gambling is affecting your life, please seek help.
+</div>
+
+<script>
+// ════════════════════════════════
+//  DATA & STATE
+// ════════════════════════════════
+let currency = 'NGN';
+const symbols = { NGN:'₦', USD:'$', GBP:'£', KES:'KES ', ZAR:'R', GHS:'GHS ', EUR:'€', INR:'₹' };
+let bets = JSON.parse(localStorage.getItem('bettruth_bets') || '[]');
+let accaLegs = [];
+
+const bookmakers = [
+  { name:'Bet9ja', country:'🇳🇬 Nigeria', margin:8.5 },
+  { name:'NairaBet', country:'🇳🇬 Nigeria', margin:9.2 },
+  { name:'Bet365', country:'🇬🇧 UK', margin:5.8 },
+  { name:'DraftKings', country:'🇺🇸 USA', margin:7.2 },
+  { name:'SportPesa', country:'🇰🇪 Kenya', margin:10.1 },
+  { name:'Hollywoodbets', country:'🇿🇦 South Africa', margin:7.8 },
+  { name:'1xBet', country:'🌍 Global', margin:6.5 },
+  { name:'Betway', country:'🌍 Global', margin:7.1 },
+  { name:'Melbet', country:'🌍 Global', margin:8.9 },
+  { name:'22Bet', country:'🌍 Global', margin:7.4 },
+];
+
+// ════════════════════════════════
+//  TICKER
+// ════════════════════════════════
+function buildTicker() {
+  const items = [
+    { name:'BET9JA MARGIN', val:'8.5%', dir:'down' },
+    { name:'EXPECTED VALUE', val:'-₦8/100', dir:'down' },
+    { name:'PROFITABLE BETTORS', val:'3%', dir:'down' },
+    { name:'NG DAILY BETTORS', val:'60M', dir:'up' },
+    { name:'ACCA 5-FOLD WIN%', val:'3.9%', dir:'down' },
+    { name:'INDEX FUND 10YR', val:'+10%/yr', dir:'up' },
+    { name:'BET365 MARGIN', val:'5.8%', dir:'down' },
+    { name:'SPORTPESA MARGIN', val:'10.1%', dir:'down' },
+    { name:'GLOBAL BETTING MKT', val:'$3.6B', dir:'up' },
+    { name:'BETTOR LOSS RATE', val:'97%', dir:'down' },
+  ];
+  const double = [...items, ...items];
+  const track = document.getElementById('ticker-track');
+  track.innerHTML = double.map(i =>
+    `<span class="tick-item"><span class="tick-name">${i.name}</span><span class="tick-val ${i.dir==='up'?'tick-up':'tick-down'}">${i.val} ${i.dir==='up'?'▲':'▼'}</span></span>`
+  ).join('');
+}
+
+// ════════════════════════════════
+//  CURRENCY
+// ════════════════════════════════
+function updateCurrency() {
+  currency = document.getElementById('currency-select').value;
+  const sym = symbols[currency];
+  document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = sym);
+  document.getElementById('sb-ev').textContent = `-${sym}8`;
+  document.getElementById('house-edge-disp').textContent = sym + '8';
+  convertOdds();
+  calcMargin();
+  calcEV();
+  quickCalc();
+}
+
+function sym() { return symbols[currency] || '₦'; }
+
+// ════════════════════════════════
+//  BOOKMAKER TABLE
+// ════════════════════════════════
+function buildBMTable() {
+  const tbody = document.getElementById('bm-table-body');
+  tbody.innerHTML = bookmakers.map(b => {
+    const cls = b.margin > 9 ? 'bm-high' : b.margin > 7 ? 'bm-med' : 'bm-low';
+    const rating = b.margin > 9 ? '<span class="badge badge-red">POOR</span>' : b.margin > 7 ? '<span class="badge badge-orange">FAIR</span>' : '<span class="badge badge-green">OK</span>';
+    return `<tr>
+      <td><strong>${b.name}</strong></td>
+      <td>${b.country}</td>
+      <td class="${cls} ${cls}" style="font-family:var(--mono);font-weight:700">${b.margin}%</td>
+      <td style="font-family:var(--mono)">${sym()}${b.margin} lost</td>
+      <td>${rating}</td>
+    </tr>`;
+  }).join('');
+
+  // Sidebar
+  const sidebar = document.getElementById('bm-sidebar');
+  sidebar.innerHTML = bookmakers.slice(0,6).map(b => {
+    const cls = b.margin > 9 ? 'bm-high' : b.margin > 7 ? 'bm-med' : 'bm-low';
+    return `<div class="bm-row">
+      <span class="bm-name">${b.name}</span>
+      <span class="bm-margin ${cls}">${b.margin}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════
+//  ODDS CALCULATOR
+// ════════════════════════════════
+function convertOdds() {
+  const format = document.getElementById('odds-format').value;
+  const raw = document.getElementById('odds-input').value;
+  const stake = parseFloat(document.getElementById('stake-input').value) || 1000;
+  let decimal = 0;
+
+  try {
+    if (format === 'decimal') {
+      decimal = parseFloat(raw);
+    } else if (format === 'fractional') {
+      const parts = raw.split('/');
+      decimal = (parseFloat(parts[0]) / parseFloat(parts[1])) + 1;
+    } else if (format === 'american') {
+      const n = parseFloat(raw);
+      decimal = n > 0 ? (n/100)+1 : (100/Math.abs(n))+1;
+    }
+  } catch(e) { return; }
+
+  if (!decimal || decimal <= 1) return;
+
+  const impliedProb = (1/decimal)*100;
+  const bookProb = impliedProb + 3; // ~3% overround assumption
+  const trueFairOdds = 100/bookProb;
+  const expectedReturn = stake * decimal;
+  const profit = expectedReturn - stake;
+  const ev = (impliedProb/100 * profit) - ((1 - impliedProb/100) * stake);
+  const fairDecimal = (100/bookProb).toFixed(2);
+
+  document.getElementById('odds-grid').innerHTML = `
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--blue)">${impliedProb.toFixed(1)}%</div><div class="rb-stat-label">Implied Win %</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--text)">${sym()}${expectedReturn.toFixed(0)}</div><div class="rb-stat-label">If You Win</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--green)">${sym()}${profit.toFixed(0)}</div><div class="rb-stat-label">Profit</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:${ev<0?'var(--red)':'var(--green)'}">${sym()}${ev.toFixed(0)}</div><div class="rb-stat-label">Expected Value</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--orange)">${fairDecimal}</div><div class="rb-stat-label">Fair Odds Should Be</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">${(100-impliedProb).toFixed(1)}%</div><div class="rb-stat-label">Lose Probability</div></div>
+  `;
+}
+
+// ════════════════════════════════
+//  MARGIN CALCULATOR
+// ════════════════════════════════
+function calcMargin() {
+  const o1 = parseFloat(document.getElementById('margin-o1').value);
+  const o2 = parseFloat(document.getElementById('margin-o2').value);
+  const o3 = parseFloat(document.getElementById('margin-o3').value);
+  if (!o1 || !o2) return;
+
+  let impliedSum = (1/o1 + 1/o2) * 100;
+  if (o3) impliedSum += (1/o3)*100;
+  const margin = impliedSum - 100;
+  const fairness = 100 - margin;
+
+  const cls = margin > 9 ? 'rb-danger' : margin > 6 ? 'rb-warn' : 'rb-success';
+  document.getElementById('margin-result').className = `result-box ${cls} visible`;
+  document.getElementById('margin-text').innerHTML = `
+    <div style="margin-bottom:8px">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Bookmaker Takes (Margin)</span><span style="color:var(--red);font-weight:700">${margin.toFixed(2)}%</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-red" style="width:${Math.min(margin*5,100)}%"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Returned to Bettors</span><span style="color:var(--green);font-weight:700">${fairness.toFixed(2)}%</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width:${fairness}%"></div></div>
+      </div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--text)">
+      For every <strong>${sym()}100</strong> bet on this market, the bookmaker keeps <strong style="color:var(--red)">${sym()}${margin.toFixed(2)}</strong> before paying any winners.
+      ${margin > 9 ? '⚠️ This is a <strong>very high margin</strong> market.' : margin > 6 ? '⚡ This is an average margin market.' : '✅ This is a relatively fair market.'}
+    </div>
+  `;
+}
+
+// ════════════════════════════════
+//  EXPECTED VALUE
+// ════════════════════════════════
+function calcEV() {
+  const prob = parseFloat(document.getElementById('ev-prob').value)/100;
+  const odds = parseFloat(document.getElementById('ev-odds').value);
+  const stake = parseFloat(document.getElementById('ev-stake').value) || 1000;
+  if (!prob || !odds) return;
+
+  const ev = (prob * (stake*(odds-1))) - ((1-prob)*stake);
+  const per100 = ev/stake*100;
+  const isPos = ev >= 0;
+
+  document.getElementById('ev-result').className = `result-box ${isPos?'rb-success':'rb-danger'} visible`;
+  document.getElementById('ev-title').textContent = isPos ? '✅ Positive Expected Value' : '❌ Negative Expected Value';
+  document.getElementById('ev-text').innerHTML = `
+    <div class="rb-grid">
+      <div class="rb-stat"><div class="rb-stat-val" style="color:${isPos?'var(--green)':'var(--red)'}">${sym()}${ev.toFixed(0)}</div><div class="rb-stat-label">EV per Bet</div></div>
+      <div class="rb-stat"><div class="rb-stat-val" style="color:${isPos?'var(--green)':'var(--red)'}"> ${per100.toFixed(1)}%</div><div class="rb-stat-label">Return on Stake</div></div>
+    </div>
+    <div style="font-size:0.72rem;margin-top:10px;color:var(--text);line-height:1.5">
+      ${isPos
+        ? `You have an edge! On average, this bet returns <strong>${sym()}${ev.toFixed(0)}</strong> profit per ${sym()}${stake} staked. But remember — this is a statistical average across many bets.`
+        : `You lose <strong style="color:var(--red)">${sym()}${Math.abs(ev).toFixed(0)}</strong> on average per ${sym()}${stake} staked. Over 100 bets: <strong style="color:var(--red)">${sym()}${(Math.abs(ev)*100).toFixed(0)}</strong> expected loss.`
+      }
+    </div>
+  `;
+}
+
+// ════════════════════════════════
+//  ACCUMULATOR
+// ════════════════════════════════
+function addAccaLeg(odds=2.0) {
+  accaLegs.push({ odds });
+  renderAccaLegs();
+}
+
+function renderAccaLegs() {
+  const container = document.getElementById('acca-legs');
+  if (accaLegs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dimmer);font-size:0.78rem">No selections added yet</div>';
+    return;
+  }
+  container.innerHTML = accaLegs.map((leg,i) => {
+    const prob = (1/leg.odds*100).toFixed(1);
+    return `<div class="acca-leg">
+      <input class="inp" value="${leg.odds}" oninput="accaLegs[${i}].odds=parseFloat(this.value)||2" style="max-width:120px" placeholder="Odds"/>
+      <span class="acca-odds">${(1/leg.odds*100).toFixed(1)}% win</span>
+      <button class="remove-btn" onclick="accaLegs.splice(${i},1);renderAccaLegs()">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function calcAcca() {
+  if (accaLegs.length === 0) return;
+  const totalOdds = accaLegs.reduce((a,b)=>a*b.odds, 1);
+  const trueProbProduct = accaLegs.reduce((a,b)=>a*(1/b.odds), 1)*100;
+  const bookProb = accaLegs.reduce((a,b)=>a*((1/b.odds)+0.03), 1)*100;
+  const houseAdv = bookProb - trueProbProduct;
+  const stake = 1000;
+  const ev = (trueProbProduct/100 * stake*(totalOdds-1)) - ((1-trueProbProduct/100)*stake);
+
+  document.getElementById('acca-result').classList.add('visible');
+  document.getElementById('acca-grid').innerHTML = `
+    <div class="rb-stat"><div class="rb-stat-val">${totalOdds.toFixed(2)}</div><div class="rb-stat-label">Total Odds</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">${trueProbProduct.toFixed(2)}%</div><div class="rb-stat-label">Real Win %</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">${sym()}${Math.abs(ev).toFixed(0)}</div><div class="rb-stat-label">Expected Loss/bet</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">${houseAdv.toFixed(2)}%</div><div class="rb-stat-label">House Advantage</div></div>
+  `;
+  document.getElementById('acca-breakdown').innerHTML = `
+    <div style="font-size:0.75rem;background:white;padding:12px;border-radius:8px;line-height:1.7">
+      <strong>The brutal math:</strong> Your ${accaLegs.length} selection accumulator has only a 
+      <strong style="color:var(--red)">${trueProbProduct.toFixed(2)}%</strong> chance of winning — 
+      that means you'd need to place this bet <strong>${Math.round(100/trueProbProduct)} times</strong> 
+      just to win once on average. Each time you lose ${sym()}1,000.<br><br>
+      <strong>Over 100 bets at ${sym()}1,000 each:</strong> You'd spend 
+      <strong>${sym()}100,000</strong> and win approximately <strong>${Math.round(100*trueProbProduct/100)} times</strong>, 
+      giving back approximately <strong style="color:var(--green)">${sym()}${(Math.round(100*trueProbProduct/100)*totalOdds*1000).toFixed(0)}</strong> — 
+      a net ${ev*100 < 0 ? `<strong style="color:var(--red)">LOSS of ${sym()}${Math.abs(ev*100).toFixed(0)}</strong>` : `gain`}.
+    </div>
+  `;
+}
+
+function clearAcca() { accaLegs = []; renderAccaLegs(); document.getElementById('acca-result').classList.remove('visible'); }
+
+function loadAccaExample(type) {
+  const examples = {
+    double: [{odds:2.0},{odds:2.0}],
+    '5fold': [{odds:1.9},{odds:1.9},{odds:1.9},{odds:1.9},{odds:1.9}],
+    '10fold': [{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8},{odds:1.8}],
+  };
+  accaLegs = examples[type] || [];
+  renderAccaLegs();
+  calcAcca();
+  switchView('accumulator', document.querySelectorAll('.nav-item')[1]);
+}
+
+// ════════════════════════════════
+//  SIMULATOR
+// ════════════════════════════════
+function runSimulator() {
+  const daily = parseFloat(document.getElementById('sim-daily').value) || 2000;
+  const odds = parseFloat(document.getElementById('sim-odds').value) || 2.0;
+  const winRate = parseFloat(document.getElementById('sim-winrate').value)/100 || 0.45;
+  const days = parseInt(document.getElementById('sim-period').value) || 365;
+  const saveRate = parseFloat(document.getElementById('sim-saverate').value)/100 || 0.12;
+  const investRate = parseFloat(document.getElementById('sim-investrate').value)/100 || 0.20;
+
+  const totalStaked = daily * days;
+  const ev = winRate * (daily*(odds-1)) - (1-winRate)*daily;
+  const totalLoss = Math.abs(ev * days);
+  const savedAmount = totalStaked * (1 + saveRate*(days/365));
+  const investedAmount = totalStaked * (1 + investRate*(days/365));
+
+  document.getElementById('sim-result').classList.add('visible');
+  document.getElementById('sim-stats').innerHTML = `
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--text)">${sym()}${totalStaked.toLocaleString()}</div><div class="rb-stat-label">Total Staked</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">-${sym()}${totalLoss.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="rb-stat-label">Expected Loss</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--green)">${sym()}${savedAmount.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="rb-stat-label">If Saved</div></div>
+    <div class="rb-stat"><div class="rb-stat-val" style="color:var(--blue)">${sym()}${investedAmount.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="rb-stat-label">If Invested</div></div>
+  `;
+
+  const maxVal = Math.max(totalStaked, savedAmount, investedAmount);
+  document.getElementById('sim-bars').innerHTML = [
+    { label:'Betting', val: totalStaked - totalLoss, color:'#e8304a' },
+    { label:'Saved', val: savedAmount, color:'#00a854' },
+    { label:'Invested', val: investedAmount, color:'#1a6ef5' },
+    { label:'Under mattress', val: totalStaked, color:'#f59e0b' },
+  ].map(b => `
+    <div class="sim-bar-row">
+      <div class="sim-bar-label">${b.label}</div>
+      <div class="sim-bar" style="background:rgba(0,0,0,0.05)">
+        <div class="sim-bar-bg" style="width:${Math.max(0,b.val/maxVal*100)}%;background:${b.color}"></div>
+        <span style="position:relative;z-index:1;color:${b.val/maxVal > 0.3 ? 'white':'var(--text)'};">${sym()}${Math.max(0,b.val).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+      </div>
+    </div>
+  `).join('');
+
+  drawSimChart(daily, odds, winRate, days, saveRate, investRate);
+}
+
+function drawSimChart(daily, odds, winRate, days, saveRate, investRate) {
+  const canvas = document.getElementById('sim-chart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth - 24;
+  canvas.height = 200;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const points = Math.min(days, 60);
+  const step = days/points;
+  const W = canvas.width, H = canvas.height;
+  const pad = { t:10, r:10, b:30, l:60 };
+
+  let betVal = 0, saveVal = 0, investVal = 0;
+  const betData=[], saveData=[], investData=[];
+  for(let i=0;i<=points;i++){
+    const d=i*step;
+    const staked=daily*d;
+    const ev=winRate*(daily*(odds-1))-(1-winRate)*daily;
+    betData.push(staked + ev*d);
+    saveData.push(staked*(1+saveRate*(d/365)));
+    investData.push(staked*(1+investRate*(d/365)));
+  }
+
+  const allVals = [...betData,...saveData,...investData];
+  const minV=Math.min(...allVals), maxV=Math.max(...allVals);
+  const range=maxV-minV||1;
+
+  const toX=i=>(pad.l+(i/points)*(W-pad.l-pad.r));
+  const toY=v=>(pad.t+(1-(v-minV)/range)*(H-pad.t-pad.b));
+
+  // Grid
+  ctx.strokeStyle='#e8edf3'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+i*(H-pad.t-pad.b)/4;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    const val=maxV-i*(range/4);
+    ctx.fillStyle='#6b7c93'; ctx.font='10px DM Mono'; ctx.textAlign='right';
+    ctx.fillText(sym()+Math.round(val).toLocaleString(), pad.l-4, y+4);
+  }
+
+  // Lines
+  const drawLine=(data,color)=>{
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    data.forEach((v,i)=>i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v)));
+    ctx.stroke();
+  };
+  drawLine(betData,'#e8304a');
+  drawLine(saveData,'#00a854');
+  drawLine(investData,'#1a6ef5');
+
+  // Zero line
+  if (minV < 0 && maxV > 0) {
+    const y=toY(0);
+    ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Legend
+  [['Betting','#e8304a'],['Savings','#00a854'],['Investment','#1a6ef5']].forEach(([label,color],i)=>{
+    ctx.fillStyle=color; ctx.fillRect(pad.l+i*100,H-18,12,10);
+    ctx.fillStyle='#1a2332'; ctx.font='10px DM Sans'; ctx.textAlign='left';
+    ctx.fillText(label, pad.l+i*100+16, H-9);
+  });
+}
+
+// ════════════════════════════════
+//  BET TRACKER
+// ════════════════════════════════
+function addBet() {
+  const desc = document.getElementById('bet-desc').value;
+  const stake = parseFloat(document.getElementById('bet-stake').value);
+  const odds = parseFloat(document.getElementById('bet-odds').value);
+  const result = document.getElementById('bet-result').value;
+  if (!stake || !odds) return;
+
+  const potential = stake * odds;
+  const pnl = result==='won' ? potential-stake : result==='lost' ? -stake : 0;
+
+  bets.push({ desc:desc||'Unnamed', stake, odds, result, potential, pnl, date: new Date().toLocaleDateString() });
+  localStorage.setItem('bettruth_bets', JSON.stringify(bets));
+  renderTracker();
+  document.getElementById('bet-desc').value='';
+  document.getElementById('bet-stake').value='';
+  document.getElementById('bet-odds').value='';
+}
+
+function clearBets() { if(confirm('Clear all bets?')){bets=[];localStorage.removeItem('bettruth_bets');renderTracker();} }
+
+function renderTracker() {
+  const settled = bets.filter(b=>b.result!=='pending');
+  const won = bets.filter(b=>b.result==='won');
+  const lost = bets.filter(b=>b.result==='lost');
+  const totalStaked = settled.reduce((a,b)=>a+b.stake,0);
+  const totalReturn = won.reduce((a,b)=>a+b.potential,0);
+  const totalPnL = totalReturn - settled.reduce((a,b)=>a+b.stake,0);
+  const winRate = settled.length>0?won.length/settled.length*100:0;
+
+  if (bets.length > 0) {
+    const pnlColor = totalPnL >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('tracker-stats').innerHTML = `
+      <div class="rb-grid">
+        <div class="rb-stat"><div class="rb-stat-val">${bets.length}</div><div class="rb-stat-label">Total Bets</div></div>
+        <div class="rb-stat"><div class="rb-stat-val" style="color:var(--green)">${won.length}</div><div class="rb-stat-label">Won</div></div>
+        <div class="rb-stat"><div class="rb-stat-val" style="color:var(--red)">${lost.length}</div><div class="rb-stat-label">Lost</div></div>
+        <div class="rb-stat"><div class="rb-stat-val" style="color:var(--blue)">${winRate.toFixed(1)}%</div><div class="rb-stat-label">Win Rate</div></div>
+        <div class="rb-stat"><div class="rb-stat-val">${sym()}${totalStaked.toLocaleString()}</div><div class="rb-stat-label">Total Staked</div></div>
+        <div class="rb-stat"><div class="rb-stat-val" style="color:${pnlColor}">${totalPnL>=0?'+':''}${sym()}${totalPnL.toFixed(0)}</div><div class="rb-stat-label">P&L</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Win Rate</span><span>${winRate.toFixed(1)}%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-${winRate>50?'green':'red'}" style="width:${winRate}%"></div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('bet-history').innerHTML = bets.length === 0
+    ? '<div style="text-align:center;padding:20px;color:var(--dimmer);font-size:0.8rem">No bets logged yet</div>'
+    : `<table class="odds-table">
+        <thead><tr><th>Date</th><th>Description</th><th>Stake</th><th>Odds</th><th>Potential</th><th>Result</th><th>P&L</th></tr></thead>
+        <tbody>${bets.map((b,i)=>`<tr>
+          <td style="color:var(--dim)">${b.date}</td>
+          <td>${b.desc}</td>
+          <td style="font-family:var(--mono)">${sym()}${b.stake}</td>
+          <td style="font-family:var(--mono)">${b.odds}</td>
+          <td style="font-family:var(--mono)">${sym()}${b.potential.toFixed(0)}</td>
+          <td>${b.result==='won'?'<span class="badge badge-green">WON</span>':b.result==='lost'?'<span class="badge badge-red">LOST</span>':'<span class="badge badge-orange">PENDING</span>'}</td>
+          <td style="font-family:var(--mono);color:${b.pnl>0?'var(--green)':b.pnl<0?'var(--red)':'var(--dim)'}">${b.pnl>0?'+':''}${b.pnl===0?'—':sym()+b.pnl.toFixed(0)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+}
+
+// ════════════════════════════════
+//  EDUCATION
+// ════════════════════════════════
+function buildEducation() {
+  document.getElementById('truth-meter-1').innerHTML = [
+    { icon:'📌', text:'When a bookmaker offers you odds of <strong>2.00</strong>, they are NOT saying you have a 50% chance of winning. Their implied probability is higher — usually <strong>~52-54%</strong> — the difference is their profit margin.', score:'KEY FACT' },
+    { icon:'⚠️', text:'Bookmakers employ entire teams of <strong>mathematicians and data scientists</strong> to ensure every market they offer has a built-in edge. You are playing against professionals.', score:'REALITY' },
+    { icon:'📉', text:'The longer you bet, the more certain your losses become. Variance decreases over time and the house edge always wins. <strong>Time is the bookmaker\'s best friend.</strong>', score:'MATH LAW' },
+    { icon:'💡', text:'There ARE professional bettors who profit — but they bet thousands of markets, use statistical models, and have edges under 1%. Even then, <strong>97% of retail bettors still lose.</strong>', score:'TRUTH' },
+  ].map(t=>`<div class="tm-row"><span class="tm-icon">${t.icon}</span><span class="tm-text">${t.text}</span><span class="tm-score" style="color:var(--blue)">${t.score}</span></div>`).join('');
+
+  document.getElementById('alternatives').innerHTML = [
+    { icon:'📈', title:'Index Funds', desc:'S&P 500 averages 10% yearly. No skill needed. Just time.', color:'var(--green)' },
+    { icon:'🏦', title:'High-Yield Savings', desc:'Nigerian banks offer 12-15% interest. Your money grows safely.', color:'var(--blue)' },
+    { icon:'💼', title:'Small Business', desc:'Even a small trade can return 30-50% monthly with less risk.', color:'var(--orange)' },
+    { icon:'🎓', title:'Skills Investment', desc:'Learning to code, trade, or freelance can 10x your income.', color:'var(--purple)' },
+    { icon:'🏠', title:'Real Estate', desc:'Property in growing cities returns 15-20% annually in Africa.', color:'var(--green)' },
+  ].map(a=>`<div style="display:flex;gap:10px;padding:8px;border-radius:7px;background:var(--bg);margin-bottom:8px;border:1px solid var(--border)">
+    <span style="font-size:1.2rem">${a.icon}</span>
+    <div>
+      <div style="font-weight:700;font-size:0.82rem;color:${a.color}">${a.title}</div>
+      <div style="font-size:0.72rem;color:var(--dim);margin-top:2px">${a.desc}</div>
+    </div>
+  </div>`).join('');
+
+  document.getElementById('math-lessons').innerHTML = `
+    <div class="grid-3" style="gap:12px">
+      ${[
+        { title:'The Gambler\'s Fallacy', icon:'🎲', desc:'Past results do NOT affect future bets. A team winning 5 games in a row does NOT mean they\'re more or less likely to win the 6th. Each event is independent.' },
+        { title:'The Accumulator Trap', icon:'🔗', desc:'Bookmakers love accumulators because the margin multiplies with each leg. A 5-fold accumulator with 5% margin per leg means a compound edge of over 22% against you.' },
+        { title:'The Sunk Cost Fallacy', icon:'💸', desc:'"I\'ve lost ₦50,000 so I need to win it back." This thinking causes the biggest losses. Money already lost is gone. Each new bet is a fresh decision with the same odds.' },
+        { title:'Variance vs Edge', icon:'📊', desc:'Short-term wins feel like skill. Long-term losses are the mathematical reality. A lucky month means nothing. The edge always reveals itself over hundreds of bets.' },
+        { title:'The Favourite-Longshot Bias', icon:'⚡', desc:'Bettors consistently overvalue longshots and undervalue favourites. Bookmakers exploit this by offering even worse odds on outsiders than their probability justifies.' },
+        { title:'The Kelly Criterion', icon:'🧮', desc:'Even professional gamblers who have an edge never bet more than 1-5% of their bankroll per bet. If you\'re betting 20%+ of your money on one game, you\'re gambling, not investing.' },
+      ].map(l=>`<div class="card" style="margin-bottom:0">
+        <div style="font-size:1.5rem;margin-bottom:8px">${l.icon}</div>
+        <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">${l.title}</div>
+        <div style="font-size:0.75rem;color:var(--dim);line-height:1.6">${l.desc}</div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+
+// ════════════════════════════════
+//  QUICK CALC
+// ════════════════════════════════
+function quickCalc() {
+  const amount = parseFloat(document.getElementById('quick-amount').value) || 500;
+  const daily_loss = amount * 0.08;
+  const monthly = daily_loss * 30;
+  const yearly = daily_loss * 365;
+  const s = sym();
+  document.getElementById('quick-result').innerHTML = `
+    <div style="background:var(--red2);padding:8px;border-radius:6px;margin-bottom:6px;border:1px solid rgba(232,48,74,0.2)">
+      <strong style="color:var(--red)">Expected losses:</strong><br>
+      Daily: ${s}${daily_loss.toFixed(0)} · Monthly: ${s}${monthly.toFixed(0)} · Yearly: ${s}${yearly.toFixed(0)}
+    </div>
+    <div style="background:var(--green2);padding:8px;border-radius:6px;border:1px solid rgba(0,168,84,0.2)">
+      <strong style="color:var(--green)">If saved instead:</strong><br>
+      Monthly: ${s}${(amount*30).toFixed(0)} → Yearly: ${s}${(amount*365*1.12).toFixed(0)} (+12% interest)
+    </div>
+  `;
+}
+
+// ════════════════════════════════
+//  TAB SWITCHING
+// ════════════════════════════════
+function switchView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(name+'-view').classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ════════════════════════════════
+//  INIT
+// ════════════════════════════════
+buildTicker();
+buildBMTable();
+convertOdds();
+calcMargin();
+calcEV();
+quickCalc();
+renderAccaLegs();
+renderTracker();
+buildEducation();
+
+// Auto-init accumulator with example
+addAccaLeg(1.9); addAccaLeg(2.1); addAccaLeg(1.8);
+</script>
+</body>
+</html>
