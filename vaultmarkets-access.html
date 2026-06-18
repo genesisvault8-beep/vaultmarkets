@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultMarkets — Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --panel: #080f1c;
+  --border: rgba(0,229,255,0.1);
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff3355;
+  --gold: #ffd700;
+  --purple: #bf00ff;
+  --text: #b0c8d8;
+  --dim: #1a2a3a;
+  --muted: #3a5060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events:none; z-index:0;
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+}
+
+.logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.15em;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.logo span { color: var(--cyan); }
+.logo-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 32px 28px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.5;
+}
+
+.card-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--cyan);
+  letter-spacing: 0.2em;
+  margin-bottom: 20px;
+}
+
+.input-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  display: block;
+}
+.code-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 14px 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  color: var(--cyan);
+  letter-spacing: 0.2em;
+  outline: none;
+  text-transform: uppercase;
+  transition: border-color 0.2s;
+  margin-bottom: 20px;
+}
+.code-input:focus { border-color: var(--cyan); }
+.code-input.error { border-color: var(--red); animation: shake 0.3s ease; }
+.code-input.success { border-color: var(--green); }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.unlock-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.unlock-btn:hover {
+  background: var(--cyan);
+  color: var(--bg);
+}
+.unlock-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--red);
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+.success-msg {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--green);
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+  display: none;
+}
+.success-msg.show { display: block; }
+
+/* How to get access card */
+.how-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px 28px;
+}
+.how-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-bottom: 16px;
+}
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.step:last-child { margin-bottom: 0; }
+.step-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  color: var(--cyan);
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 2px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-text {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+.step-text strong {
+  color: #fff;
+  font-weight: 600;
+}
+.step-text a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.plan {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px;
+  text-align: center;
+}
+.plan.featured { border-color: rgba(0,229,255,0.3); }
+.plan-name {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+}
+.plan-price {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+.plan-price span {
+  font-size: 0.65rem;
+  color: var(--muted);
+  font-family: 'Share Tech Mono', monospace;
+}
+.plan.featured .plan-price { color: var(--cyan); }
+
+.footer-note {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 24px;
+  letter-spacing: 0.1em;
+}
+.footer-note a { color: var(--muted); text-decoration: none; }
+.footer-note a:hover { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">VAULT<span>MARKETS</span></div>
+  <div class="logo-tag">// INTELLIGENCE OVER LUCK</div>
+
+  <div class="card">
+    <div class="card-title">// ENTER ACCESS CODE</div>
+    <label class="input-label">// YOUR CODE</label>
+    <input
+      class="code-input"
+      id="codeInput"
+      type="text"
+      placeholder="VM-XXXXXXXX"
+      maxlength="12"
+      autocomplete="off"
+      onkeydown="if(event.key==='Enter')unlock()"
+      oninput="this.value=this.value.toUpperCase()"
+    >
+    <button class="unlock-btn" onclick="unlock()" id="unlockBtn">
+      ▶ UNLOCK PLATFORM
+    </button>
+    <div class="error-msg" id="errorMsg">// INVALID CODE — CHECK AND TRY AGAIN</div>
+    <div class="success-msg" id="successMsg">// ACCESS GRANTED — LOADING PLATFORM...</div>
+  </div>
+
+  <div class="how-card">
+    <div class="how-title">// HOW TO GET ACCESS</div>
+
+    <div class="plans">
+      <div class="plan featured">
+        <div class="plan-name">MONTHLY</div>
+        <div class="plan-price">₦2,000<span>/mo</span></div>
+      </div>
+      <div class="plan">
+        <div class="plan-name">3 MONTHS</div>
+        <div class="plan-price">₦5,000<span>/3mo</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Send payment to <strong>VaultMarkets</strong> via bank transfer or OPay/Palmpay</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Send your payment screenshot to <strong><a href="https://wa.me/YOURNUMBER" target="_blank">WhatsApp</a></strong> or <strong>email</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Receive your personal access code within <strong>1 hour</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Enter code above to unlock <strong>all 8 tools</strong></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <a href="vaultmarkets-landing.html">← BACK TO HOME</a>
+    &nbsp;·&nbsp;
+    CODES ARE PERSONAL AND NON-TRANSFERABLE
+  </div>
+</div>
+
+<script>
+// ── ACCESS CODES ──────────────────────────────────────────────
+// Add valid codes here. Format: 'CODE': expiry timestamp (0 = never expires)
+// To generate a code: VM- + 8 random uppercase chars e.g. VM-AX7KPQ2R
+const VALID_CODES = {
+  'VM-DEMO2026': 0,        // demo code, never expires
+  // Add paid codes below as you sell access:
+  // 'VM-AX7KPQ2R': 1767225600000,  // expires Jan 1 2026
+};
+
+const SESSION_KEY = 'vm_access';
+const CODE_KEY = 'vm_code';
+
+function unlock() {
+  const input = document.getElementById('codeInput');
+  const code = input.value.trim().toUpperCase();
+  const errMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  const btn = document.getElementById('unlockBtn');
+
+  errMsg.classList.remove('show');
+  successMsg.classList.remove('show');
+  input.classList.remove('error', 'success');
+
+  if (!code || code.length < 4) {
+    input.classList.add('error');
+    errMsg.textContent = '// ENTER YOUR ACCESS CODE';
+    errMsg.classList.add('show');
+    return;
+  }
+
+  const expiry = VALID_CODES[code];
+
+  if (expiry === undefined) {
+    input.classList.add('error');
+    errMsg.textContent = '// INVALID CODE — CHECK AND TRY AGAIN';
+    errMsg.classList.add('show');
+    return;
+  }
+
+  if (expiry !== 0 && Date.now() > expiry) {
+    input.classList.add('error');
+    errMsg.textContent = '// CODE EXPIRED — RENEW YOUR SUBSCRIPTION';
+    errMsg.classList.add('show');
+    return;
+  }
+
+  // Valid — grant access
+  input.classList.add('success');
+  successMsg.classList.add('show');
+  btn.disabled = true;
+
+  // Store session
+  localStorage.setItem(SESSION_KEY, 'true');
+  localStorage.setItem(CODE_KEY, code);
+  localStorage.setItem('vm_access_time', Date.now().toString());
+
+  // Redirect to main platform
+  setTimeout(() => {
+    const redirect = getRedirectTarget();
+    window.location.href = redirect;
+  }, 1200);
+}
+
+function getRedirectTarget() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('redirect') || 'vaultmarkets-main.html';
+}
+
+// Auto-check if already has valid session
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(SESSION_KEY) === 'true') {
+    const redirect = getRedirectTarget();
+    window.location.href = redirect;
+  }
+});
+</script>
+</body>
+</html>

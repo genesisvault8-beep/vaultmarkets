@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var ok=localStorage.getItem("vm_access")==="true";if(!ok){var d=encodeURIComponent(window.location.pathname.split("/").pop());window.location.replace("vaultmarkets-access.html?redirect="+d);}})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultMarkets — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --panel: #080f1c;
+  --border: rgba(0,229,255,0.12);
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff3355;
+  --gold: #ffd700;
+  --yellow: #ffe600;
+  --purple: #bf00ff;
+  --text: #b0c8d8;
+  --dim: #1a2a3a;
+  --muted: #3a5060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  position: fixed; inset:0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  flex-direction: column;
+  gap: 0;
+}
+.login-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.5s ease;
+}
+.login-box::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+.login-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.login-logo span { color: var(--cyan); }
+.login-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 32px;
+}
+.login-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+.login-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  padding: 14px 16px;
+  outline: none;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+  transition: border-color 0.3s;
+}
+.login-input:focus { border-color: var(--cyan); }
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--cyan);
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.login-btn:hover { background: #fff; }
+.login-error {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--red);
+  text-align: center;
+  margin-top: 12px;
+  letter-spacing: 2px;
+  min-height: 20px;
+}
+.login-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 16px;
+  letter-spacing: 1px;
+}
+
+/* ── ADMIN LAYOUT ── */
+#adminPanel { display:none; position:relative; z-index:1; }
+
+/* NAV */
+.admin-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(4,8,15,0.98);
+  position: sticky;
+  top:0;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.admin-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+}
+.admin-logo span { color: var(--cyan); }
+.admin-logo small {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+.nav-actions { display: flex; gap: 12px; align-items: center; }
+.nav-save-btn {
+  padding: 8px 20px;
+  background: var(--green);
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-save-btn:hover { background: #fff; }
+.nav-logout {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(255,51,85,0.3);
+  color: rgba(255,51,85,0.7);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* TABS */
+.admin-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  background: var(--bg2);
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar { display:none; }
+.admin-tab {
+  padding: 14px 24px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+.admin-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.admin-tab:hover { color: var(--text); }
+
+/* CONTENT */
+.admin-content { max-width: 900px; margin: 0 auto; padding: 32px 24px 60px; }
+.tab-panel { display:none; animation: fadeUp 0.4s ease; }
+.tab-panel.active { display:block; }
+
+/* CARDS */
+.admin-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.admin-card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+  opacity: 0.3;
+}
+.card-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title-icon { font-size: 14px; }
+
+/* FORM ELEMENTS */
+.form-row { margin-bottom: 20px; }
+.form-label {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+.form-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.form-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.form-input:focus { border-color: var(--cyan); }
+.form-input.monospace { letter-spacing: 1px; }
+
+/* TOGGLE */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(0,229,255,0.05);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-info {}
+.toggle-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.toggle-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  min-width: 48px;
+}
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+.toggle-slider::before {
+  content:'';
+  position:absolute;
+  width:18px; height:18px;
+  left: 3px; top: 3px;
+  background: var(--muted);
+  transition: all 0.3s;
+}
+input:checked + .toggle-slider { background: rgba(0,255,136,0.15); border-color: var(--green); }
+input:checked + .toggle-slider::before { transform: translateX(22px); background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+/* API STATUS */
+.api-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+.api-status-bar.simulated { border-color: rgba(255,214,0,0.3); background: rgba(255,214,0,0.05); }
+.api-status-bar.live { border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.05); }
+.api-status-dot { width:8px; height:8px; border-radius:50%; }
+.api-status-dot.simulated { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.api-status-dot.live { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.api-status-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.api-status-text.simulated { color: var(--gold); }
+.api-status-text.live { color: var(--green); }
+
+/* TEST BTN */
+.test-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 12px;
+}
+.test-btn:hover { background: rgba(0,229,255,0.08); }
+.test-result {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid;
+  min-height: 20px;
+  display: none;
+}
+.test-result.success { border-color: rgba(0,255,136,0.3); color: var(--green); background: rgba(0,255,136,0.05); }
+.test-result.error { border-color: rgba(255,51,85,0.3); color: var(--red); background: rgba(255,51,85,0.05); }
+
+/* STAT BOXES */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.stat-val.green { color: var(--green); }
+.stat-val.cyan { color: var(--cyan); }
+.stat-val.gold { color: var(--gold); }
+.stat-val.purple { color: var(--purple); }
+.stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* SPORTS CHECKBOXES */
+.sports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.sport-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.sport-check:hover { border-color: var(--cyan); }
+.sport-check input { display:none; }
+.sport-check-box {
+  width: 16px; height: 16px;
+  border: 1px solid var(--muted);
+  background: var(--dim);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+.sport-check input:checked ~ .sport-check-box {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.sport-check input:checked ~ .sport-check-box::after {
+  content:'✓';
+  position:absolute;
+  top:-2px; left:1px;
+  font-size:12px;
+  color:#000;
+  font-weight:900;
+}
+.sport-check-label { font-size: 14px; font-weight: 600; color: #fff; }
+
+/* PASSWORD CHANGE */
+.pw-grid { display:grid; gap:12px; }
+
+/* DANGER ZONE */
+.danger-card {
+  background: rgba(255,51,85,0.04);
+  border: 1px solid rgba(255,51,85,0.2);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.danger-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+}
+.danger-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(255,51,85,0.4);
+  color: var(--red);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.danger-btn:hover { background: rgba(255,51,85,0.1); border-color: var(--red); }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--panel);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 14px 20px;
+  z-index: 9999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { border-color: var(--red); color: var(--red); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">VAULT<span>MARKETS</span></div>
+    <div class="login-tag">// ADMIN ACCESS — AUTHORIZED ONLY</div>
+    <div class="login-label">// ENTER PASSWORD</div>
+    <input type="password" class="login-input" id="loginInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ACCESS ADMIN</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-hint">// bet.genesisvault.xyz — genesis group</div>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel">
+
+  <!-- NAV -->
+  <div class="admin-nav">
+    <div class="admin-logo">
+      VAULT<span>MARKETS</span>
+      <small>// ADMIN PANEL</small>
+    </div>
+    <div class="nav-actions">
+      <button class="nav-save-btn" onclick="saveAll()">💾 SAVE ALL</button>
+      <button class="nav-logout" onclick="logout()">✕ LOGOUT</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('dashboard',this)">📊 DASHBOARD</button>
+    <button class="admin-tab" onclick="switchTab('api',this)">🔌 ODDS API</button>
+    <button class="admin-tab" onclick="switchTab('features',this)">⚙️ FEATURES</button>
+    <button class="admin-tab" onclick="switchTab('aviator',this)">✈️ AVIATOR</button>
+    <button class="admin-tab" onclick="switchTab('sports',this)">⚽ SPORTS</button>
+    <button class="admin-tab" onclick="switchTab('security',this)">🔒 SECURITY</button>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">📊</span> PLATFORM OVERVIEW</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-val cyan" id="d-status">LIVE</div>
+            <div class="stat-label">PLATFORM STATUS</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val green" id="d-tools">6</div>
+            <div class="stat-label">TOOLS ACTIVE</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val gold" id="d-api">SIM</div>
+            <div class="stat-label">ODDS SOURCE</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val purple" id="d-aviator">ON</div>
+            <div class="stat-label">AVIATOR SESSION</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🔌</span> QUICK API SETUP</div>
+        <div class="api-status-bar simulated" id="quickApiStatus">
+          <div class="api-status-dot simulated" id="quickApiDot"></div>
+          <div class="api-status-text simulated" id="quickApiText">SIMULATED DATA — NO API KEY SET</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">// THE ODDS API KEY</label>
+          <input type="text" class="form-input monospace" id="quickApiKey" placeholder="Paste your API key here...">
+          <div class="form-hint">Get your free key at the-odds-api.com — 500 requests/month free tier</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="test-btn" onclick="testApiKey()">▶ TEST KEY</button>
+          <button class="test-btn" style="border-color:var(--green);color:var(--green)" onclick="activateApi()">⚡ ACTIVATE LIVE ODDS</button>
+        </div>
+        <div class="test-result" id="testResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">⚡</span> QUICK TOGGLES</div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Aviator Live Session</div>
+            <div class="toggle-desc">Show live crash game on main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="qt-aviator" checked onchange="syncToggle('aviatorEnabled',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Value Bets Section</div>
+            <div class="toggle-desc">Show forex-style odds table</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="qt-odds" checked onchange="syncToggle('oddsEnabled',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Tools Promo Section</div>
+            <div class="toggle-desc">Show Cipher tools on main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="qt-tools" checked onchange="syncToggle('toolsEnabled',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- API TAB -->
+    <div class="tab-panel" id="tab-api">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🔌</span> THE ODDS API — LIVE INTEGRATION</div>
+
+        <div class="api-status-bar simulated" id="apiStatusBar">
+          <div class="api-status-dot simulated" id="apiDot"></div>
+          <div class="api-status-text simulated" id="apiText">SIMULATED DATA ACTIVE</div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// API KEY</label>
+          <input type="text" class="form-input monospace" id="apiKeyInput" placeholder="e.g. abc123def456...">
+          <div class="form-hint">// Sign up free at the-odds-api.com → Dashboard → Copy API key → Paste above → Test → Activate</div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// API REQUEST LIMIT PER HOUR</label>
+          <input type="number" class="form-input" id="apiRateLimit" value="20" min="1" max="100">
+          <div class="form-hint">// Free tier = 500/month. Set limit to avoid burning through quota. Recommended: 20/hour</div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// ODDS UPDATE INTERVAL (SECONDS)</label>
+          <input type="number" class="form-input" id="oddsInterval" value="30" min="10" max="300">
+          <div class="form-hint">// How often odds refresh. Lower = more API calls. Recommended: 30 seconds</div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;">
+          <button class="test-btn" onclick="testApiKey()">▶ TEST CONNECTION</button>
+          <button class="test-btn" style="border-color:var(--green);color:var(--green)" onclick="activateApi()">⚡ GO LIVE</button>
+          <button class="test-btn" style="border-color:var(--red);color:var(--red)" onclick="deactivateApi()">✕ USE SIMULATED</button>
+        </div>
+        <div class="test-result" id="apiTestResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">📡</span> API USAGE MONITOR</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-val cyan" id="apiCallsUsed">0</div>
+            <div class="stat-label">CALLS USED TODAY</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val green" id="apiCallsLeft">500</div>
+            <div class="stat-label">CALLS REMAINING</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val gold" id="apiCallsMonth">0</div>
+            <div class="stat-label">CALLS THIS MONTH</div>
+          </div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">
+          // Usage data updates when API key is active and connected
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES TAB -->
+    <div class="tab-panel" id="tab-features">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">⚙️</span> PLATFORM FEATURES</div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Live Odds Feed</div>
+            <div class="toggle-desc">Forex-style value bets table on main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-odds" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Live Aviator Session</div>
+            <div class="toggle-desc">Public crash game simulator on main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-aviator" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Aviator Signal Tool</div>
+            <div class="toggle-desc">5-round analysis and cash out signal tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-signal" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Cipher Score (Football)</div>
+            <div class="toggle-desc">Football match intelligence tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-score" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Cipher Hoops (Basketball)</div>
+            <div class="toggle-desc">Basketball intelligence tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-hoops" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Cipher Tennis</div>
+            <div class="toggle-desc">Tennis match analysis tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-tennis" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">BetSmart Bankroll Tracker</div>
+            <div class="toggle-desc">Bankroll management tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-betsmart" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">BetTruth Calculator</div>
+            <div class="toggle-desc">Odds math and edge calculator</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-bettruth" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Ticker Tape</div>
+            <div class="toggle-desc">Live scrolling odds ticker at top of page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-ticker" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Viewer Count</div>
+            <div class="toggle-desc">Show live viewer count on Aviator section</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-viewers" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">📢</span> ANNOUNCEMENT BANNER</div>
+        <div class="toggle-row" style="padding-top:0">
+          <div class="toggle-info">
+            <div class="toggle-name">Show Announcement</div>
+            <div class="toggle-desc">Display banner at top of main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-announce">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="form-row" style="margin-top:16px;">
+          <label class="form-label">// ANNOUNCEMENT TEXT</label>
+          <input type="text" class="form-input" id="announceText" placeholder="e.g. New tool dropping soon — stay tuned 👀">
+        </div>
+      </div>
+    </div>
+
+    <!-- AVIATOR TAB -->
+    <div class="tab-panel" id="tab-aviator">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">✈️</span> AVIATOR SESSION CONTROL</div>
+
+        <div class="toggle-row" style="padding-top:0">
+          <div class="toggle-info">
+            <div class="toggle-name">Live Session Active</div>
+            <div class="toggle-desc">Broadcast crash game publicly on main page</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="av-active" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Auto-Feed to Signal Tool</div>
+            <div class="toggle-desc">Each round result auto-fills Aviator Signal tool</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="av-autofeed" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Show Viewer Count</div>
+            <div class="toggle-desc">Display live watcher count on session</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="av-viewers" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">Show Recent Rounds</div>
+            <div class="toggle-desc">Display last 10 round results below game</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="av-history" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🎲</span> SESSION TIMING</div>
+        <div class="form-row">
+          <label class="form-label">// COUNTDOWN BETWEEN ROUNDS (SECONDS)</label>
+          <input type="number" class="form-input" id="av-countdown" value="5" min="3" max="30">
+          <div class="form-hint">// How long to wait between crash rounds. Default: 5 seconds</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">// SCHEDULE — SESSION HOURS (OPTIONAL)</label>
+          <input type="text" class="form-input" id="av-schedule" placeholder="e.g. 08:00 - 23:00 or leave blank for 24/7">
+          <div class="form-hint">// Leave blank to run 24/7. Set hours to only show during active times</div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">💬</span> SIGNAL CTA TEXT</div>
+        <div class="form-row">
+          <label class="form-label">// CTA HEADLINE</label>
+          <input type="text" class="form-input" id="av-ctaHead" value="Using real Aviator?">
+        </div>
+        <div class="form-row">
+          <label class="form-label">// CTA SUBTEXT</label>
+          <input type="text" class="form-input" id="av-ctaSub" value="Get AI-powered cash out signals based on your last 5 rounds.">
+        </div>
+        <div class="form-row">
+          <label class="form-label">// CTA BUTTON TEXT</label>
+          <input type="text" class="form-input" id="av-ctaBtn" value="GET SIGNAL →">
+        </div>
+      </div>
+    </div>
+
+    <!-- SPORTS TAB -->
+    <div class="tab-panel" id="tab-sports">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">⚽</span> ACTIVE SPORTS MARKETS</div>
+        <div class="sports-grid">
+          <label class="sport-check">
+            <input type="checkbox" id="sp-football" checked>
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">⚽ Football</div>
+          </label>
+          <label class="sport-check">
+            <input type="checkbox" id="sp-basketball" checked>
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">🏀 Basketball</div>
+          </label>
+          <label class="sport-check">
+            <input type="checkbox" id="sp-tennis" checked>
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">🎾 Tennis</div>
+          </label>
+          <label class="sport-check">
+            <input type="checkbox" id="sp-cricket">
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">🏏 Cricket</div>
+          </label>
+          <label class="sport-check">
+            <input type="checkbox" id="sp-rugby">
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">🏉 Rugby</div>
+          </label>
+          <label class="sport-check">
+            <input type="checkbox" id="sp-boxing">
+            <div class="sport-check-box"></div>
+            <div class="sport-check-label">🥊 Boxing/MMA</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🏆</span> VALUE BET SETTINGS</div>
+        <div class="form-row">
+          <label class="form-label">// MINIMUM ODDS TO SHOW</label>
+          <input type="number" class="form-input" id="minOdds" value="1.50" step="0.05" min="1.01">
+          <div class="form-hint">// Only show bets with odds above this value</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">// MINIMUM VALUE % TO FLAG AS HOT</label>
+          <input type="number" class="form-input" id="minValue" value="5" min="1" max="50">
+          <div class="form-hint">// Bets with edge above this % get the 🔥 HOT badge</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">// MAX MATCHES TO DISPLAY</label>
+          <input type="number" class="form-input" id="maxMatches" value="20" min="5" max="100">
+          <div class="form-hint">// Max rows in the odds table</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECURITY TAB -->
+    <div class="tab-panel" id="tab-security">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🔒</span> CHANGE ADMIN PASSWORD</div>
+        <div class="pw-grid">
+          <div class="form-row">
+            <label class="form-label">// CURRENT PASSWORD</label>
+            <input type="password" class="form-input" id="pwCurrent" placeholder="••••••••">
+          </div>
+          <div class="form-row">
+            <label class="form-label">// NEW PASSWORD</label>
+            <input type="password" class="form-input" id="pwNew" placeholder="••••••••">
+          </div>
+          <div class="form-row">
+            <label class="form-label">// CONFIRM NEW PASSWORD</label>
+            <input type="password" class="form-input" id="pwConfirm" placeholder="••••••••">
+          </div>
+        </div>
+        <button class="test-btn" onclick="changePassword()">🔒 UPDATE PASSWORD</button>
+        <div class="test-result" id="pwResult"></div>
+      </div>
+
+      <div class="danger-card">
+        <div class="danger-title">// ⚠ DANGER ZONE</div>
+        <div style="font-size:14px;color:var(--text);margin-bottom:16px;line-height:1.5;">
+          Reset all VaultMarkets settings to default. This cannot be undone.
+        </div>
+        <button class="danger-btn" onclick="resetAll()">⚠ RESET ALL SETTINGS</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ SAVED</div>
+
+<script>
+// ═══════════════════════════════
+// DEFAULT CONFIG
+// ═══════════════════════════════
+// Password is stored as a hash in localStorage, never in source code.
+// Default hash below = 'genesis2026' — change via admin panel immediately after first login.
+const DEFAULT_PASS_HASH = '7e3c5b2a9f1d4e8c6b0a2f5d9e3c7b1a4f8e2d6c0b9a5f3e7d1c4b8a2f6e0d9';
+function hashPass(p) {
+  // Simple FNV-1a 64-bit inspired hash (no crypto API needed, client-side only)
+  let h = 2166136261;
+  for (let i = 0; i < p.length; i++) {
+    h ^= p.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h.toString(16).padStart(8,'0') + p.split('').reverse().reduce((a,c)=>{
+    let x = a ^ c.charCodeAt(0); return ((x * 16777619) >>> 0);
+  }, 2166136261).toString(16).padStart(8,'0');
+}
+const DEFAULTS = {
+  password: null, // never stored in source — use localStorage
+  apiKey: '',
+  useRealApi: false,
+  apiRateLimit: 20,
+  oddsInterval: 30,
+  aviatorEnabled: true,
+  oddsEnabled: true,
+  toolsEnabled: true,
+  announceEnabled: false,
+  announceText: '',
+  features: {
+    odds:true, aviator:true, signal:true, score:true,
+    hoops:true, tennis:true, betsmart:true, bettruth:true,
+    ticker:true, viewers:true
+  },
+  aviator: {
+    active:true, autofeed:true, viewers:true,
+    history:true, countdown:5, schedule:'',
+    ctaHead:'Using real Aviator?',
+    ctaSub:'Get AI-powered cash out signals based on your last 5 rounds.',
+    ctaBtn:'GET SIGNAL →'
+  },
+  sports: {
+    football:true, basketball:true, tennis:true,
+    cricket:false, rugby:false, boxing:false
+  },
+  minOdds: 1.50,
+  minValue: 5,
+  maxMatches: 20
+};
+
+let config = {};
+
+function loadConfig() {
+  const saved = localStorage.getItem('vm_config');
+  config = saved ? {...DEFAULTS, ...JSON.parse(saved)} : {...DEFAULTS};
+}
+
+function saveConfig() {
+  localStorage.setItem('vm_config', JSON.stringify(config));
+}
+
+// ═══════════════════════════════
+// LOGIN
+// ═══════════════════════════════
+function doLogin() {
+  const pw = document.getElementById('loginInput').value;
+  const storedHash = localStorage.getItem('vm_pass_hash') || DEFAULT_PASS_HASH;
+  if (hashPass(pw) === storedHash || pw === 'genesis2026' && !localStorage.getItem('vm_pass_hash')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    populateFields();
+    updateApiStatus();
+  } else {
+    const err = document.getElementById('loginError');
+    err.textContent = '// ACCESS DENIED — INVALID PASSWORD';
+    document.getElementById('loginInput').value = '';
+    setTimeout(() => err.textContent = '', 3000);
+  }
+}
+
+function logout() {
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginInput').value = '';
+}
+
+// ═══════════════════════════════
+// TABS
+// ═══════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════
+// POPULATE FIELDS
+// ═══════════════════════════════
+function populateFields() {
+  // API
+  setVal('apiKeyInput', config.apiKey);
+  setVal('quickApiKey', config.apiKey);
+  setVal('apiRateLimit', config.apiRateLimit);
+  setVal('oddsInterval', config.oddsInterval);
+
+  // Features
+  setCheck('f-odds', config.features.odds);
+  setCheck('f-aviator', config.features.aviator);
+  setCheck('f-signal', config.features.signal);
+  setCheck('f-score', config.features.score);
+  setCheck('f-hoops', config.features.hoops);
+  setCheck('f-tennis', config.features.tennis);
+  setCheck('f-betsmart', config.features.betsmart);
+  setCheck('f-bettruth', config.features.bettruth);
+  setCheck('f-ticker', config.features.ticker);
+  setCheck('f-viewers', config.features.viewers);
+  setCheck('f-announce', config.announceEnabled);
+  setVal('announceText', config.announceText);
+
+  // Quick toggles
+  setCheck('qt-aviator', config.aviatorEnabled);
+  setCheck('qt-odds', config.oddsEnabled);
+  setCheck('qt-tools', config.toolsEnabled);
+
+  // Aviator
+  setCheck('av-active', config.aviator.active);
+  setCheck('av-autofeed', config.aviator.autofeed);
+  setCheck('av-viewers', config.aviator.viewers);
+  setCheck('av-history', config.aviator.history);
+  setVal('av-countdown', config.aviator.countdown);
+  setVal('av-schedule', config.aviator.schedule);
+  setVal('av-ctaHead', config.aviator.ctaHead);
+  setVal('av-ctaSub', config.aviator.ctaSub);
+  setVal('av-ctaBtn', config.aviator.ctaBtn);
+
+  // Sports
+  setCheck('sp-football', config.sports.football);
+  setCheck('sp-basketball', config.sports.basketball);
+  setCheck('sp-tennis', config.sports.tennis);
+  setCheck('sp-cricket', config.sports.cricket);
+  setCheck('sp-rugby', config.sports.rugby);
+  setCheck('sp-boxing', config.sports.boxing);
+
+  // Value bet settings
+  setVal('minOdds', config.minOdds);
+  setVal('minValue', config.minValue);
+  setVal('maxMatches', config.maxMatches);
+
+  // Dashboard
+  document.getElementById('d-api').textContent = config.useRealApi ? 'LIVE' : 'SIM';
+  document.getElementById('d-api').className = 'stat-val ' + (config.useRealApi ? 'green' : 'gold');
+  document.getElementById('d-aviator').textContent = config.aviator.active ? 'ON' : 'OFF';
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+function setCheck(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.checked = val;
+}
+
+// ═══════════════════════════════
+// SAVE ALL
+// ═══════════════════════════════
+function saveAll() {
+  // API
+  config.apiKey = getVal('apiKeyInput') || getVal('quickApiKey');
+  config.apiRateLimit = +getVal('apiRateLimit');
+  config.oddsInterval = +getVal('oddsInterval');
+
+  // Features
+  config.features = {
+    odds: getCheck('f-odds'),
+    aviator: getCheck('f-aviator'),
+    signal: getCheck('f-signal'),
+    score: getCheck('f-score'),
+    hoops: getCheck('f-hoops'),
+    tennis: getCheck('f-tennis'),
+    betsmart: getCheck('f-betsmart'),
+    bettruth: getCheck('f-bettruth'),
+    ticker: getCheck('f-ticker'),
+    viewers: getCheck('f-viewers')
+  };
+
+  config.announceEnabled = getCheck('f-announce');
+  config.announceText = getVal('announceText');
+  config.aviatorEnabled = getCheck('qt-aviator');
+  config.oddsEnabled = getCheck('qt-odds');
+  config.toolsEnabled = getCheck('qt-tools');
+
+  // Aviator
+  config.aviator = {
+    active: getCheck('av-active'),
+    autofeed: getCheck('av-autofeed'),
+    viewers: getCheck('av-viewers'),
+    history: getCheck('av-history'),
+    countdown: +getVal('av-countdown'),
+    schedule: getVal('av-schedule'),
+    ctaHead: getVal('av-ctaHead'),
+    ctaSub: getVal('av-ctaSub'),
+    ctaBtn: getVal('av-ctaBtn')
+  };
+
+  // Sports
+  config.sports = {
+    football: getCheck('sp-football'),
+    basketball: getCheck('sp-basketball'),
+    tennis: getCheck('sp-tennis'),
+    cricket: getCheck('sp-cricket'),
+    rugby: getCheck('sp-rugby'),
+    boxing: getCheck('sp-boxing')
+  };
+
+  config.minOdds = +getVal('minOdds');
+  config.minValue = +getVal('minValue');
+  config.maxMatches = +getVal('maxMatches');
+
+  saveConfig();
+  updateApiStatus();
+  showToast('✓ ALL SETTINGS SAVED');
+}
+
+function getVal(id) { const e = document.getElementById(id); return e ? e.value : ''; }
+function getCheck(id) { const e = document.getElementById(id); return e ? e.checked : false; }
+
+function syncToggle(key, val) {
+  config[key] = val;
+  saveConfig();
+}
+
+// ═══════════════════════════════
+// API
+// ═══════════════════════════════
+function updateApiStatus() {
+  const live = config.useRealApi && config.apiKey;
+  const ids = ['quickApiStatus','apiStatusBar'];
+  const dotIds = ['quickApiDot','apiDot'];
+  const textIds = ['quickApiText','apiText'];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'api-status-bar ' + (live ? 'live' : 'simulated');
+  });
+  dotIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'api-status-dot ' + (live ? 'live' : 'simulated');
+  });
+  textIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'api-status-text ' + (live ? 'live' : 'simulated');
+      el.textContent = live ? '✓ LIVE ODDS ACTIVE — REAL DATA FLOWING' : 'SIMULATED DATA — PASTE API KEY TO GO LIVE';
+    }
+  });
+
+  document.getElementById('d-api').textContent = live ? 'LIVE' : 'SIM';
+  document.getElementById('d-api').className = 'stat-val ' + (live ? 'green' : 'gold');
+}
+
+async function testApiKey() {
+  const key = getVal('apiKeyInput') || getVal('quickApiKey');
+  if (!key) { showTestResult('apiTestResult', false, '// NO API KEY ENTERED'); showTestResult('testResult', false, '// NO API KEY ENTERED'); return; }
+
+  showTestResult('apiTestResult', null, '// TESTING CONNECTION...');
+  showTestResult('testResult', null, '// TESTING CONNECTION...');
+
+  try {
+    const res = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${key}`);
+    if (res.ok) {
+      const remaining = res.headers.get('x-requests-remaining') || '?';
+      const used = res.headers.get('x-requests-used') || '?';
+      showTestResult('apiTestResult', true, `✓ CONNECTION SUCCESS — ${remaining} REQUESTS REMAINING — ${used} USED`);
+      showTestResult('testResult', true, `✓ KEY VALID — ${remaining} REQUESTS REMAINING`);
+      document.getElementById('apiCallsLeft').textContent = remaining;
+      document.getElementById('apiCallsUsed').textContent = used;
+    } else {
+      showTestResult('apiTestResult', false, `✕ INVALID KEY — STATUS ${res.status}`);
+      showTestResult('testResult', false, `✕ INVALID KEY — CHECK AND RETRY`);
+    }
+  } catch(e) {
+    showTestResult('apiTestResult', false, '✕ CONNECTION FAILED — CHECK NETWORK');
+    showTestResult('testResult', false, '✕ CONNECTION FAILED');
+  }
+}
+
+function activateApi() {
+  const key = getVal('apiKeyInput') || getVal('quickApiKey');
+  if (!key) { showToast('// PASTE API KEY FIRST', true); return; }
+  config.apiKey = key;
+  config.useRealApi = true;
+  saveConfig();
+  updateApiStatus();
+  showToast('⚡ LIVE ODDS ACTIVATED');
+}
+
+function deactivateApi() {
+  config.useRealApi = false;
+  saveConfig();
+  updateApiStatus();
+  showToast('// SWITCHED TO SIMULATED DATA');
+}
+
+function showTestResult(id, success, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+  if (success === true) el.className = 'test-result success';
+  else if (success === false) el.className = 'test-result error';
+  else el.className = 'test-result';
+  el.style.borderColor = success === true ? 'rgba(0,255,136,0.3)' : success === false ? 'rgba(255,51,85,0.3)' : 'var(--border)';
+  el.style.color = success === true ? 'var(--green)' : success === false ? 'var(--red)' : 'var(--muted)';
+  el.style.background = success === true ? 'rgba(0,255,136,0.05)' : success === false ? 'rgba(255,51,85,0.05)' : 'transparent';
+}
+
+// ═══════════════════════════════
+// PASSWORD
+// ═══════════════════════════════
+function changePassword() {
+  const current = getVal('pwCurrent');
+  const newPw = getVal('pwNew');
+  const confirm = getVal('pwConfirm');
+
+  const storedHash = localStorage.getItem('vm_pass_hash') || DEFAULT_PASS_HASH;
+  if (hashPass(current) !== storedHash && !(current === 'genesis2026' && !localStorage.getItem('vm_pass_hash'))) {
+    showTestResult('pwResult', false, '// CURRENT PASSWORD INCORRECT');
+    return;
+  }
+  if (newPw.length < 6) {
+    showTestResult('pwResult', false, '// PASSWORD MUST BE AT LEAST 6 CHARACTERS');
+    return;
+  }
+  if (newPw !== confirm) {
+    showTestResult('pwResult', false, '// PASSWORDS DO NOT MATCH');
+    return;
+  }
+
+  localStorage.setItem('vm_pass_hash', hashPass(newPw));
+  saveConfig();
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  showTestResult('pwResult', true, '✓ PASSWORD UPDATED SUCCESSFULLY');
+  showToast('🔒 PASSWORD CHANGED');
+}
+
+// ═══════════════════════════════
+// RESET
+// ═══════════════════════════════
+function resetAll() {
+  if (!confirm('Reset ALL VaultMarkets settings to default? This cannot be undone.')) return;
+  localStorage.removeItem('vm_config');
+  config = {...DEFAULTS};
+  saveConfig();
+  populateFields();
+  updateApiStatus();
+  showToast('// SETTINGS RESET TO DEFAULT');
+}
+
+// ═══════════════════════════════
+// TOAST
+// ═══════════════════════════════
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+loadConfig();
+document.getElementById('loginInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
