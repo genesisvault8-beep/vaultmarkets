@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cipher Daily Pick</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: #0d0d0d;
+  color: #f0f0f0;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.sub {
+  text-align: center;
+  font-size: 0.6rem;
+  color: #555;
+  letter-spacing: 0.15em;
+  margin-bottom: 20px;
+}
+
+.sport-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sport-btn {
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #666;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.sport-btn.active {
+  background: #1a1a1a;
+  border-color: #fff;
+  color: #fff;
+}
+
+.card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.card-header {
+  font-size: 0.6rem;
+  color: #444;
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.field {
+  margin-bottom: 10px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.58rem;
+  color: #555;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.field input, .field select {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  color: #f0f0f0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  padding: 9px 10px;
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.field input:focus, .field select:focus {
+  border-color: #555;
+}
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.analyze-btn {
+  width: 100%;
+  padding: 14px;
+  background: #f0f0f0;
+  color: #0d0d0d;
+  border: none;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 14px;
+  transition: background 0.2s;
+}
+
+.analyze-btn:active { background: #ccc; }
+
+/* VERDICT */
+.verdict {
+  display: none;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.verdict.yes {
+  background: #0a1f0a;
+  border: 1px solid #1a5c1a;
+}
+
+.verdict.no {
+  background: #1f0a0a;
+  border: 1px solid #5c1a1a;
+}
+
+.verdict.maybe {
+  background: #1a1500;
+  border: 1px solid #5c4a00;
+}
+
+.verdict-word {
+  font-size: 2.2rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.verdict.yes .verdict-word { color: #00cc44; }
+.verdict.no .verdict-word { color: #cc2200; }
+.verdict.maybe .verdict-word { color: #ccaa00; }
+
+.verdict-reason {
+  font-size: 0.62rem;
+  color: #888;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-box {
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.5rem;
+  color: #444;
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+.ev-positive { color: #00cc44; }
+.ev-negative { color: #cc2200; }
+.ev-neutral { color: #ccaa00; }
+
+/* PICKS SECTION */
+.picks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.picks-title {
+  font-size: 0.6rem;
+  color: #444;
+  letter-spacing: 0.2em;
+}
+
+.clear-btn {
+  font-size: 0.55rem;
+  color: #333;
+  background: none;
+  border: none;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+
+.pick-item {
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pick-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pick-dot.yes { background: #00cc44; }
+.pick-dot.no { background: #cc2200; }
+.pick-dot.maybe { background: #ccaa00; }
+
+.pick-info { flex: 1; }
+
+.pick-name {
+  font-size: 0.72rem;
+  color: #ddd;
+  margin-bottom: 2px;
+}
+
+.pick-detail {
+  font-size: 0.55rem;
+  color: #444;
+  letter-spacing: 0.05em;
+}
+
+.pick-badge {
+  font-size: 0.55rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: 3px;
+}
+
+.pick-badge.yes { background: #0a2a0a; color: #00cc44; }
+.pick-badge.no { background: #2a0a0a; color: #cc2200; }
+.pick-badge.maybe { background: #2a2000; color: #ccaa00; }
+
+/* DAILY SUMMARY */
+.summary-box {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.summary-title {
+  font-size: 0.6rem;
+  color: #444;
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.sum-stat {
+  text-align: center;
+  padding: 8px;
+  background: #0d0d0d;
+  border-radius: 4px;
+}
+
+.sum-val {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.sum-label {
+  font-size: 0.5rem;
+  color: #444;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+.go-badge {
+  display: none;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  margin-top: 10px;
+}
+
+.go-badge.green { background: #0a1f0a; color: #00cc44; border: 1px solid #1a5c1a; }
+.go-badge.red { background: #1f0a0a; color: #cc2200; border: 1px solid #5c1a1a; }
+.go-badge.yellow { background: #1a1500; color: #ccaa00; border: 1px solid #5c4a00; }
+
+.divider {
+  border: none;
+  border-top: 1px solid #1a1a1a;
+  margin: 16px 0;
+}
+
+/* BASKETBALL EXTRA */
+.tennis-fields { display: block; }
+.basket-fields { display: none; }
+</style>
+</head>
+<body>
+
+<h1>CIPHER DAILY</h1>
+<div class="sub">PICK ANALYZER · 25 SLE SYSTEM</div>
+
+<!-- SPORT TOGGLE -->
+<div class="sport-toggle">
+  <button class="sport-btn active" onclick="setSport('tennis', this)">🎾 TENNIS</button>
+  <button class="sport-btn" onclick="setSport('basketball', this)">🏀 BASKETBALL</button>
+</div>
+
+<!-- INPUT CARD -->
+<div class="card">
+  <div class="card-header">MATCH INPUT</div>
+
+  <div class="row2">
+    <div class="field">
+      <label>Player 1 / Team 1</label>
+      <input type="text" id="p1" placeholder="e.g. Djokovic">
+    </div>
+    <div class="field">
+      <label>Player 2 / Team 2</label>
+      <input type="text" id="p2" placeholder="e.g. Alcaraz">
+    </div>
+  </div>
+
+  <!-- TENNIS FIELDS -->
+  <div class="tennis-fields" id="tennis-fields">
+    <div class="row2">
+      <div class="field">
+        <label>P1 Serve Win %</label>
+        <input type="number" id="t-p1-serve" placeholder="e.g. 68" min="40" max="95">
+      </div>
+      <div class="field">
+        <label>P2 Serve Win %</label>
+        <input type="number" id="t-p2-serve" placeholder="e.g. 64" min="40" max="95">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>P1 Return Win %</label>
+        <input type="number" id="t-p1-return" placeholder="e.g. 38" min="20" max="65">
+      </div>
+      <div class="field">
+        <label>P2 Return Win %</label>
+        <input type="number" id="t-p2-return" placeholder="e.g. 35" min="20" max="65">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Surface</label>
+        <select id="t-surface">
+          <option value="hard">Hard Court</option>
+          <option value="clay">Clay</option>
+          <option value="grass">Grass</option>
+          <option value="indoor">Indoor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Format</label>
+        <select id="t-format">
+          <option value="bo3">Best of 3</option>
+          <option value="bo5">Best of 5</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- BASKETBALL FIELDS -->
+  <div class="basket-fields" id="basket-fields">
+    <div class="row2">
+      <div class="field">
+        <label>T1 Off Rating</label>
+        <input type="number" id="b-t1-off" placeholder="e.g. 112" min="95" max="125">
+      </div>
+      <div class="field">
+        <label>T1 Def Rating</label>
+        <input type="number" id="b-t1-def" placeholder="e.g. 108" min="95" max="125">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>T2 Off Rating</label>
+        <input type="number" id="b-t2-off" placeholder="e.g. 109" min="95" max="125">
+      </div>
+      <div class="field">
+        <label>T2 Def Rating</label>
+        <input type="number" id="b-t2-def" placeholder="e.g. 110" min="95" max="125">
+      </div>
+    </div>
+    <div class="field">
+      <label>Home Court</label>
+      <select id="b-home">
+        <option value="t1">Team 1 is Home</option>
+        <option value="t2">Team 2 is Home</option>
+        <option value="neutral">Neutral</option>
+      </select>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="row2">
+    <div class="field">
+      <label>Bet On</label>
+      <select id="bet-on">
+        <option value="p1">Player 1 / Team 1</option>
+        <option value="p2">Player 2 / Team 2</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Bookmaker Odds</label>
+      <input type="number" id="bk-odds" placeholder="e.g. 2.00" step="0.01" min="1.01">
+    </div>
+  </div>
+</div>
+
+<button class="analyze-btn" onclick="analyze()">ANALYZE PICK</button>
+
+<!-- VERDICT -->
+<div class="verdict" id="verdict">
+  <div class="verdict-word" id="verdict-word"></div>
+  <div class="stats-row" id="stats-row"></div>
+  <div class="verdict-reason" id="verdict-reason"></div>
+</div>
+
+<!-- TODAY'S PICKS -->
+<div class="card">
+  <div class="picks-header">
+    <div class="picks-title">TODAY'S PICKS</div>
+    <button class="clear-btn" onclick="clearPicks()">CLEAR</button>
+  </div>
+  <div id="picks-list">
+    <div style="font-size:0.62rem;color:#333;text-align:center;padding:10px;">No picks yet today</div>
+  </div>
+
+  <!-- DAILY SUMMARY -->
+  <div id="daily-summary" style="display:none">
+    <hr class="divider" style="margin:10px 0">
+    <div class="summary-grid">
+      <div class="sum-stat">
+        <div class="sum-val" id="sum-stake">0 SLE</div>
+        <div class="sum-label">TOTAL STAKE</div>
+      </div>
+      <div class="sum-stat">
+        <div class="sum-val" id="sum-return">0 SLE</div>
+        <div class="sum-label">IF BOTH WIN</div>
+      </div>
+      <div class="sum-stat">
+        <div class="sum-val" id="sum-profit">0 SLE</div>
+        <div class="sum-label">PROFIT</div>
+      </div>
+      <div class="sum-stat">
+        <div class="sum-val" id="sum-edge">—</div>
+        <div class="sum-label">AVG EDGE</div>
+      </div>
+    </div>
+    <div class="go-badge" id="go-badge"></div>
+  </div>
+</div>
+
+<script>
+let sport = 'tennis';
+let picks = JSON.parse(localStorage.getItem('cipher_picks') || '[]');
+// Clear old picks from previous days
+const today = new Date().toDateString();
+if (localStorage.getItem('cipher_date') !== today) {
+  picks = [];
+  localStorage.setItem('cipher_date', today);
+  localStorage.setItem('cipher_picks', '[]');
+}
+
+function setSport(s, el) {
+  sport = s;
+  document.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tennis-fields').style.display = s === 'tennis' ? 'block' : 'none';
+  document.getElementById('basket-fields').style.display = s === 'basketball' ? 'block' : 'none';
+}
+
+// Surface adjustments for tennis
+const surfAdj = {
+  hard:    { serve: 1.00, return: 1.00 },
+  clay:    { serve: 0.93, return: 1.06 },
+  grass:   { serve: 1.07, return: 0.94 },
+  indoor:  { serve: 1.03, return: 0.98 }
+};
+
+function calcSetWin(p1Hold, p2Hold) {
+  // Probability P1 wins a set
+  const p1Break = 1 - p2Hold;
+  const p2Break = 1 - p1Hold;
+  // Simplified set win via geometric series
+  const p = p1Hold * p2Break / (p1Hold * p2Break + p2Hold * p1Break + 0.0001);
+  return Math.max(0.05, Math.min(0.95, p));
+}
+
+function calcMatchWin(pSet, format) {
+  if (format === 'bo3') {
+    // Win 2 sets
+    return pSet*pSet + 2*pSet*pSet*(1-pSet);
+  } else {
+    // Win 3 sets (bo5)
+    const q = 1-pSet;
+    return pSet**3 + 3*pSet**3*q + 6*pSet**3*q*q;
+  }
+}
+
+function analyzeTennis() {
+  const p1s = parseFloat(document.getElementById('t-p1-serve').value) || 65;
+  const p2s = parseFloat(document.getElementById('t-p2-serve').value) || 63;
+  const p1r = parseFloat(document.getElementById('t-p1-return').value) || 36;
+  const p2r = parseFloat(document.getElementById('t-p2-return').value) || 34;
+  const surface = document.getElementById('t-surface').value;
+  const format = document.getElementById('t-format').value;
+  const adj = surfAdj[surface];
+
+  const p1AdjServe = Math.min(p1s * adj.serve, 94) / 100;
+  const p2AdjServe = Math.min(p2s * adj.serve, 94) / 100;
+  const p1AdjReturn = Math.min(p1r * adj.return, 65) / 100;
+  const p2AdjReturn = Math.min(p2r * adj.return, 65) / 100;
+
+  const p1Hold = (p1AdjServe + (1 - p2AdjReturn)) / 2;
+  const p2Hold = (p2AdjServe + (1 - p1AdjReturn)) / 2;
+
+  const pSet = calcSetWin(p1Hold, p2Hold);
+  const p1Win = calcMatchWin(pSet, format);
+  const p2Win = 1 - p1Win;
+
+  return { p1Win, p2Win };
+}
+
+function analyzeBasketball() {
+  const t1off = parseFloat(document.getElementById('b-t1-off').value) || 110;
+  const t1def = parseFloat(document.getElementById('b-t1-def').value) || 108;
+  const t2off = parseFloat(document.getElementById('b-t2-off').value) || 109;
+  const t2def = parseFloat(document.getElementById('b-t2-def').value) || 110;
+  const home = document.getElementById('b-home').value;
+
+  // Net rating difference
+  let t1net = (t1off - t1def);
+  let t2net = (t2off - t2def);
+
+  // Home court boost ~3 pts
+  if (home === 't1') t1net += 3;
+  else if (home === 't2') t2net += 3;
+
+  const diff = t1net - t2net;
+  // Convert to win probability via logistic
+  const p1Win = 1 / (1 + Math.exp(-diff * 0.15));
+  const p2Win = 1 - p1Win;
+
+  return { p1Win, p2Win };
+}
+
+function analyze() {
+  const p1name = document.getElementById('p1').value || 'Player 1';
+  const p2name = document.getElementById('p2').value || 'Player 2';
+  const betOn = document.getElementById('bet-on').value;
+  const bkOdds = parseFloat(document.getElementById('bk-odds').value);
+
+  if (!bkOdds || bkOdds < 1.01) {
+    alert('Enter valid bookmaker odds');
+    return;
+  }
+
+  let probs;
+  if (sport === 'tennis') probs = analyzeTennis();
+  else probs = analyzeBasketball();
+
+  const modelProb = betOn === 'p1' ? probs.p1Win : probs.p2Win;
+  const impliedProb = 1 / bkOdds;
+  const ev = (modelProb * bkOdds) - 1;
+  const edge = ((modelProb - impliedProb) / impliedProb) * 100;
+  const betName = betOn === 'p1' ? p1name : p2name;
+
+  // Verdict
+  let vClass, vWord, vReason;
+  if (ev > 0.05 && edge > 5) {
+    vClass = 'yes';
+    vWord = 'BET IT';
+    vReason = `Model gives ${betName} ${(modelProb*100).toFixed(1)}% vs bookie's ${(impliedProb*100).toFixed(1)}%. You have a +${edge.toFixed(1)}% edge. EV is positive.`;
+  } else if (ev > 0 && edge > 0) {
+    vClass = 'maybe';
+    vWord = 'MARGINAL';
+    vReason = `Small edge of ${edge.toFixed(1)}%. Only bet if you're confident in your stats. EV: +${ev.toFixed(3)}.`;
+  } else {
+    vClass = 'no';
+    vWord = 'SKIP';
+    vReason = `No edge. Bookie's price is fair or unfavorable. Model: ${(modelProb*100).toFixed(1)}% vs implied ${(impliedProb*100).toFixed(1)}%. Don't force it.`;
+  }
+
+  // Show verdict
+  const verdictEl = document.getElementById('verdict');
+  verdictEl.className = 'verdict ' + vClass;
+  verdictEl.style.display = 'block';
+  document.getElementById('verdict-word').textContent = vWord;
+
+  const evColor = ev > 0 ? 'ev-positive' : 'ev-negative';
+  const edgeColor = edge > 0 ? 'ev-positive' : 'ev-negative';
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-val">${(modelProb*100).toFixed(1)}%</div>
+      <div class="stat-label">MODEL PROB</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val class="${edgeColor}">${edge > 0 ? '+' : ''}${edge.toFixed(1)}%</div>
+      <div class="stat-label">EDGE</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val ${evColor}">${ev >= 0 ? '+' : ''}${ev.toFixed(3)}</div>
+      <div class="stat-label">EV</div>
+    </div>
+  `;
+
+  document.getElementById('verdict-reason').textContent = vReason;
+
+  // Auto-add to picks if BET IT or MARGINAL
+  if (vClass !== 'no') {
+    // Check if already 2 picks
+    if (picks.length >= 2) {
+      // Replace last one or warn
+      if (!confirm('You already have 2 picks. Replace the last one?')) return;
+      picks.pop();
+    }
+    picks.push({
+      name: betName,
+      odds: bkOdds,
+      edge: edge,
+      ev: ev,
+      modelProb,
+      verdict: vClass,
+      sport
+    });
+    localStorage.setItem('cipher_picks', JSON.stringify(picks));
+    renderPicks();
+  }
+
+  verdictEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderPicks() {
+  const list = document.getElementById('picks-list');
+  const summary = document.getElementById('daily-summary');
+
+  if (picks.length === 0) {
+    list.innerHTML = '<div style="font-size:0.62rem;color:#333;text-align:center;padding:10px;">No picks yet today</div>';
+    summary.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = picks.map((p, i) => `
+    <div class="pick-item">
+      <div class="pick-dot ${p.verdict}"></div>
+      <div class="pick-info">
+        <div class="pick-name">${p.name} <span style="color:#444;font-size:0.65rem">@ ${p.odds}</span></div>
+        <div class="pick-detail">Edge: ${p.edge > 0 ? '+' : ''}${p.edge.toFixed(1)}% · Model: ${(p.modelProb*100).toFixed(1)}% · ${p.sport.toUpperCase()}</div>
+      </div>
+      <div class="pick-badge ${p.verdict}">${p.verdict === 'yes' ? 'BET' : 'MARGINAL'}</div>
+    </div>
+  `).join('');
+
+  // Summary
+  summary.style.display = 'block';
+  const totalStake = picks.length * 25;
+  const combinedOdds = picks.reduce((acc, p) => acc * p.odds, 1);
+  const totalReturn = Math.round(totalStake * combinedOdds / picks.length); // per ticket
+  const acca = picks.length === 2 ? picks[0].odds * picks[1].odds : picks[0].odds;
+  const accaReturn = Math.round(25 * acca);
+  const profit = accaReturn - 25;
+  const avgEdge = picks.reduce((a, p) => a + p.edge, 0) / picks.length;
+
+  document.getElementById('sum-stake').textContent = '25 SLE';
+  document.getElementById('sum-return').textContent = accaReturn + ' SLE';
+  document.getElementById('sum-profit').textContent = '+' + profit + ' SLE';
+  document.getElementById('sum-edge').textContent = (avgEdge > 0 ? '+' : '') + avgEdge.toFixed(1) + '%';
+
+  const badge = document.getElementById('go-badge');
+  badge.style.display = 'block';
+
+  if (picks.length === 2 && picks.every(p => p.verdict === 'yes')) {
+    badge.className = 'go-badge green';
+    badge.textContent = '✓ BOTH PICKS CONFIRMED — PLACE BET';
+  } else if (picks.length === 2) {
+    badge.className = 'go-badge yellow';
+    badge.textContent = '⚠ ONE PICK MARGINAL — PROCEED WITH CAUTION';
+  } else {
+    badge.className = 'go-badge yellow';
+    badge.textContent = 'WAITING FOR 2ND PICK';
+  }
+}
+
+function clearPicks() {
+  if (picks.length === 0) return;
+  if (confirm('Clear today\'s picks?')) {
+    picks = [];
+    localStorage.setItem('cipher_picks', '[]');
+    renderPicks();
+    document.getElementById('verdict').style.display = 'none';
+  }
+}
+
+// Init
+renderPicks();
+</script>
+</body>
+</html>

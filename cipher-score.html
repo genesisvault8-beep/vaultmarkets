@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIPHER SCORE — Football Intelligence Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #010a06;
+    --panel: #020e08;
+    --neon: #00ff6a;
+    --neon2: #ff6a00;
+    --neon3: #00cfff;
+    --red: #ff2d55;
+    --yellow: #ffd60a;
+    --green: #00ff6a;
+    --text: #c8ffe0;
+    --muted: #2a5a3a;
+    --border: rgba(0,255,106,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* GRASS PATTERN BG */
+  body::before {
+    content:'';
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,255,106,0.015) 0px, rgba(0,255,106,0.015) 1px, transparent 1px, transparent 60px),
+      repeating-linear-gradient(0deg, rgba(0,255,106,0.015) 0px, rgba(0,255,106,0.015) 1px, transparent 1px, transparent 60px);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  body::after {
+    content:'';
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,106,0.008) 3px, rgba(0,255,106,0.008) 4px);
+    pointer-events:none;
+    z-index:1000;
+  }
+
+  .scan-line {
+    position:fixed; top:0; left:0;
+    width:100%; height:2px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,106,0.6), transparent);
+    animation: scanDown 7s linear infinite;
+    pointer-events:none; z-index:999;
+  }
+
+  @keyframes scanDown {
+    from { transform:translateY(-5px); }
+    to { transform:translateY(100vh); }
+  }
+
+  .container {
+    position:relative; z-index:1;
+    max-width:1100px;
+    margin:0 auto;
+    padding:14px 14px 40px;
+  }
+
+  /* HEADER */
+  header { text-align:center; padding:22px 0 14px; }
+
+  .logo {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(1.8rem,5.5vw,3.2rem);
+    font-weight:900;
+    letter-spacing:0.18em;
+    color:var(--neon);
+    text-shadow:0 0 20px var(--neon), 0 0 60px var(--neon), 0 0 120px rgba(0,255,106,0.3);
+    animation:flicker 6s infinite;
+  }
+
+  .logo span { color:var(--neon2); text-shadow:0 0 20px var(--neon2), 0 0 60px var(--neon2); }
+
+  .tagline {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; color:var(--muted);
+    letter-spacing:0.3em; margin-top:5px;
+  }
+
+  .status-bar {
+    display:flex; justify-content:center; gap:20px;
+    margin-top:10px; flex-wrap:wrap;
+  }
+
+  .s-item {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.58rem; color:var(--muted);
+    display:flex; align-items:center; gap:5px;
+  }
+
+  .s-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 6px var(--green);
+    animation:blink 2s infinite;
+  }
+
+  /* TABS */
+  .tabs {
+    display:flex; margin:18px 0 0;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto; gap:0;
+  }
+
+  .tab {
+    font-family:'Orbitron', monospace;
+    font-size:0.6rem; font-weight:700;
+    letter-spacing:0.12em;
+    padding:10px 16px;
+    background:transparent;
+    border:1px solid transparent; border-bottom:none;
+    color:var(--muted); cursor:pointer;
+    transition:all 0.3s; white-space:nowrap;
+  }
+
+  .tab:hover { color:var(--neon); }
+
+  .tab.active {
+    color:var(--neon);
+    border-color:var(--border);
+    background:rgba(0,255,106,0.04);
+    text-shadow:0 0 10px var(--neon);
+    position:relative;
+  }
+
+  .tab.active::after {
+    content:''; position:absolute;
+    bottom:-1px; left:0;
+    width:100%; height:1px;
+    background:var(--bg);
+  }
+
+  /* PANELS */
+  .panel { display:none; animation:fadeUp 0.4s ease; padding-top:16px; }
+  .panel.active { display:block; }
+
+  /* CARD */
+  .card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:2px;
+    padding:18px;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+
+  .card::before {
+    content:''; position:absolute;
+    top:0; left:0; width:3px; height:100%;
+    background:var(--neon);
+    box-shadow:0 0 10px var(--neon);
+  }
+
+  .card::after {
+    content:''; position:absolute;
+    bottom:0; right:0;
+    width:16px; height:16px;
+    border-bottom:1px solid rgba(0,255,106,0.25);
+    border-right:1px solid rgba(0,255,106,0.25);
+  }
+
+  .card-title {
+    font-family:'Orbitron', monospace;
+    font-size:0.62rem; font-weight:700;
+    letter-spacing:0.18em; color:var(--neon);
+    text-transform:uppercase; margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  .card-title::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(90deg, var(--neon), transparent);
+    opacity:0.2;
+  }
+
+  /* GRID */
+  .g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media(max-width:580px) { .g2,.g3,.rg { grid-template-columns:1fr !important; } }
+
+  /* INPUTS */
+  .field { display:flex; flex-direction:column; gap:4px; }
+
+  label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.58rem; color:var(--muted);
+    letter-spacing:0.12em; text-transform:uppercase;
+  }
+
+  input, select {
+    background:rgba(0,255,106,0.03);
+    border:1px solid rgba(0,255,106,0.18);
+    color:var(--neon);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.82rem;
+    padding:8px 11px; border-radius:2px;
+    outline:none; transition:all 0.3s; width:100%;
+  }
+
+  input:focus, select:focus {
+    border-color:var(--neon);
+    box-shadow:0 0 12px rgba(0,255,106,0.15);
+    background:rgba(0,255,106,0.06);
+  }
+
+  select option { background:#020e08; }
+
+  /* BUTTON */
+  .btn {
+    font-family:'Orbitron', monospace;
+    font-size:0.62rem; font-weight:700;
+    letter-spacing:0.16em; padding:10px 22px;
+    background:transparent; border:1px solid var(--neon);
+    color:var(--neon); cursor:pointer;
+    text-transform:uppercase; transition:all 0.3s;
+    position:relative; overflow:hidden; width:100%; margin-top:6px;
+  }
+
+  .btn::before {
+    content:''; position:absolute;
+    top:0; left:-100%; width:100%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(0,255,106,0.1), transparent);
+    transition:left 0.5s;
+  }
+
+  .btn:hover::before { left:100%; }
+  .btn:hover {
+    background:rgba(0,255,106,0.08);
+    box-shadow:0 0 20px rgba(0,255,106,0.3);
+    text-shadow:0 0 10px var(--neon);
+  }
+
+  /* TEAM INPUT HEADER */
+  .team-header {
+    display:grid; grid-template-columns:1fr auto 1fr;
+    gap:12px; align-items:center; margin-bottom:16px;
+  }
+
+  .team-name-input {
+    font-family:'Orbitron', monospace;
+    font-size:0.9rem; font-weight:700;
+    text-align:center; letter-spacing:0.1em;
+    padding:10px; border:1px solid var(--border);
+    background:rgba(0,255,106,0.03);
+    color:var(--neon); outline:none;
+    transition:all 0.3s;
+  }
+
+  .team-name-input:focus {
+    border-color:var(--neon);
+    box-shadow:0 0 15px rgba(0,255,106,0.2);
+  }
+
+  .vs-badge {
+    font-family:'Orbitron', monospace;
+    font-size:1.2rem; font-weight:900;
+    color:var(--neon2);
+    text-shadow:0 0 15px var(--neon2);
+    text-align:center;
+  }
+
+  /* HEATMAP */
+  .heatmap-wrap {
+    overflow-x:auto;
+    margin:14px 0;
+  }
+
+  #heatmap-table {
+    border-collapse:collapse;
+    width:100%;
+    min-width:360px;
+  }
+
+  #heatmap-table th {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.58rem; color:var(--muted);
+    padding:5px 8px; text-align:center;
+    letter-spacing:0.1em;
+    border:1px solid rgba(0,255,106,0.06);
+  }
+
+  #heatmap-table td {
+    padding:0; text-align:center;
+    border:1px solid rgba(0,255,106,0.06);
+    cursor:pointer; transition:all 0.2s;
+    position:relative;
+  }
+
+  #heatmap-table td:hover { transform:scale(1.08); z-index:10; }
+
+  .hm-cell {
+    font-family:'Orbitron', monospace;
+    font-size:0.62rem; font-weight:700;
+    padding:7px 4px;
+    display:block;
+  }
+
+  /* TOP PICKS */
+  .pick-row {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 14px; margin:6px 0;
+    border:1px solid rgba(0,255,106,0.15);
+    background:rgba(0,255,106,0.02);
+    animation:slideIn 0.4s ease;
+    cursor:pointer; transition:all 0.2s;
+  }
+
+  .pick-row:hover {
+    border-color:var(--neon);
+    background:rgba(0,255,106,0.06);
+  }
+
+  .pick-score {
+    font-family:'Orbitron', monospace;
+    font-size:1.1rem; font-weight:900;
+    color:var(--neon); min-width:50px;
+    text-shadow:0 0 10px var(--neon);
+  }
+
+  .pick-bar-wrap { flex:1; }
+
+  .pick-bar-track {
+    height:6px; background:rgba(255,255,255,0.04);
+    overflow:hidden;
+  }
+
+  .pick-bar-fill {
+    height:100%; width:0%;
+    transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .pick-pct {
+    font-family:'Orbitron', monospace;
+    font-size:0.8rem; font-weight:700;
+    min-width:46px; text-align:right;
+  }
+
+  .pick-odds {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; color:var(--muted);
+    min-width:50px; text-align:right;
+  }
+
+  .value-badge {
+    font-family:'Orbitron', monospace;
+    font-size:0.5rem; font-weight:700;
+    padding:2px 6px; border:1px solid;
+    letter-spacing:0.1em;
+  }
+
+  /* LIVE SCORE DISPLAY */
+  .live-score-box {
+    display:grid; grid-template-columns:1fr auto 1fr;
+    gap:0; align-items:center;
+    background:rgba(0,255,106,0.03);
+    border:1px solid var(--border);
+    padding:20px; margin:12px 0; text-align:center;
+  }
+
+  .live-team {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(0.7rem, 2vw, 1rem);
+    font-weight:700; color:var(--text);
+    letter-spacing:0.08em;
+  }
+
+  .live-score {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(2rem, 6vw, 3.5rem);
+    font-weight:900; color:var(--neon);
+    text-shadow:0 0 30px var(--neon);
+    padding:0 20px;
+    position:relative;
+  }
+
+  .live-score::after {
+    content:'LIVE';
+    position:absolute;
+    top:-14px; left:50%;
+    transform:translateX(-50%);
+    font-size:0.5rem; letter-spacing:0.2em;
+    color:var(--red);
+    text-shadow:0 0 8px var(--red);
+    animation:blink 1s infinite;
+  }
+
+  .minute-display {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; color:var(--neon2);
+    text-align:center; margin-top:6px;
+    letter-spacing:0.15em;
+  }
+
+  /* PROBABILITY REMAINING */
+  .prob-remaining {
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:8px; margin:12px 0;
+  }
+
+  .prob-box {
+    background:rgba(0,255,106,0.03);
+    border:1px solid rgba(0,255,106,0.12);
+    padding:10px 6px; text-align:center;
+    position:relative;
+  }
+
+  .prob-box::before {
+    content:''; position:absolute;
+    top:0; left:0; width:100%; height:2px;
+  }
+
+  .prob-val {
+    font-family:'Orbitron', monospace;
+    font-size:1rem; font-weight:700;
+  }
+
+  .prob-key {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.52rem; color:var(--muted);
+    letter-spacing:0.1em; margin-top:3px;
+  }
+
+  /* ALERTS */
+  .alert {
+    padding:9px 13px; border-left:3px solid;
+    margin:6px 0; font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem; line-height:1.5;
+    animation:slideIn 0.35s ease;
+  }
+
+  .alert-red { border-color:var(--red); background:rgba(255,45,85,0.06); color:#ff7090; }
+  .alert-yellow { border-color:var(--yellow); background:rgba(255,214,10,0.06); color:#ffdf66; }
+  .alert-green { border-color:var(--green); background:rgba(0,255,106,0.06); color:#66ffaa; }
+  .alert-blue { border-color:var(--neon3); background:rgba(0,207,255,0.06); color:#66dfff; }
+
+  .alert-tag {
+    font-family:'Orbitron', monospace;
+    font-size:0.52rem; font-weight:700;
+    letter-spacing:0.12em; display:block; margin-bottom:3px;
+  }
+
+  /* STATS */
+  .stats-row {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:10px; margin:12px 0;
+  }
+
+  .stat-box {
+    background:rgba(0,255,106,0.03);
+    border:1px solid rgba(0,255,106,0.12);
+    padding:11px 8px; text-align:center; position:relative;
+  }
+
+  .stat-box::before {
+    content:''; position:absolute;
+    top:0; left:0; width:100%; height:2px;
+    background:var(--neon); opacity:0.3;
+  }
+
+  .stat-val {
+    font-family:'Orbitron', monospace;
+    font-size:1.1rem; font-weight:700;
+    color:var(--neon); text-shadow:0 0 8px var(--neon);
+  }
+
+  .stat-key {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.52rem; color:var(--muted);
+    letter-spacing:0.1em; margin-top:3px;
+  }
+
+  /* RADAR CHART */
+  #radarCanvas {
+    display:block; margin:0 auto;
+  }
+
+  /* GOAL TIMELINE */
+  .timeline {
+    position:relative; margin:14px 0;
+    height:40px;
+    background:rgba(0,255,106,0.03);
+    border:1px solid rgba(0,255,106,0.12);
+    overflow:hidden;
+  }
+
+  .timeline-bar {
+    position:absolute; top:0; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Orbitron', monospace;
+    font-size:0.55rem; font-weight:700;
+    transition:width 1s ease;
+  }
+
+  .tl-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem; color:var(--muted);
+    display:flex; justify-content:space-between;
+    margin-top:4px; letter-spacing:0.08em;
+  }
+
+  /* VERDICT */
+  .verdict-box {
+    text-align:center; padding:16px;
+    border:1px solid; margin-top:12px;
+    animation:slideIn 0.4s ease;
+  }
+
+  .verdict-big {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(0.9rem,2.5vw,1.3rem);
+    font-weight:900; letter-spacing:0.15em;
+    text-shadow:0 0 20px currentColor;
+  }
+
+  .verdict-sub {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.62rem; margin-top:6px; opacity:0.7;
+  }
+
+  /* ANIMATIONS */
+  @keyframes flicker {
+    0%,94%,100% { opacity:1; }
+    95% { opacity:0.8; }
+    97% { opacity:0.6; }
+  }
+
+  @keyframes blink {
+    0%,100% { opacity:1; }
+    50% { opacity:0.2; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(-8px); }
+    to { opacity:1; transform:translateX(0); }
+  }
+
+  @keyframes popIn {
+    from { opacity:0; transform:scale(0.85); }
+    to { opacity:1; transform:scale(1); }
+  }
+
+  ::-webkit-scrollbar { width:3px; height:3px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(0,255,106,0.3); }
+
+  footer {
+    text-align:center; padding:16px 0 0;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.52rem; color:var(--muted);
+    letter-spacing:0.2em;
+    border-top:1px solid rgba(0,255,106,0.08);
+    margin-top:14px;
+  }
+
+  /* DISCLAIMER BANNER */
+  .disclaimer {
+    background:rgba(255,214,10,0.05);
+    border:1px solid rgba(255,214,10,0.2);
+    padding:8px 14px; margin-bottom:14px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; color:#ffdf66;
+    letter-spacing:0.1em; text-align:center;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="scan-line"></div>
+
+<div class="container">
+
+  <header>
+    <div class="logo">CIPHER<span>SCORE</span></div>
+    <div class="tagline">// football correct score intelligence terminal v1.0 //</div>
+    <div class="status-bar">
+      <div class="s-item"><div class="s-dot"></div> POISSON ENGINE ONLINE</div>
+      <div class="s-item"><div class="s-dot"></div> VALUE SCANNER READY</div>
+      <div class="s-item"><div class="s-dot"></div> LIVE MODE ARMED</div>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    ⚠ FOOTBALL IS UNPREDICTABLE — THIS TOOL FINDS MATHEMATICAL EDGES IN ODDS, NOT GUARANTEED OUTCOMES. USE RESPONSIBLY.
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('prematch')">⚽ Pre-Match Predictor</button>
+    <button class="tab" onclick="switchTab('live')">🔴 Live Recalculator</button>
+    <button class="tab" onclick="switchTab('value')">🎯 Value Scanner</button>
+    <button class="tab" onclick="switchTab('radar')">📊 Team Radar</button>
+  </div>
+
+  <!-- PRE-MATCH -->
+  <div id="panel-prematch" class="panel active">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Match Setup</div>
+
+          <div class="team-header">
+            <input type="text" class="team-name-input" id="home-name" value="HOME TEAM" placeholder="Home Team">
+            <div class="vs-badge">VS</div>
+            <input type="text" class="team-name-input" id="away-name" value="AWAY TEAM" placeholder="Away Team">
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(0,255,106,0.03);border:1px solid rgba(0,255,106,0.1);padding:12px;border-radius:2px;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:10px;letter-spacing:0.15em;">HOME TEAM — LAST 5 MATCHES AVG</div>
+              <div class="g2">
+                <div class="field">
+                  <label>Goals Scored / Game</label>
+                  <input type="number" id="home-scored" value="1.6" step="0.1" min="0">
+                </div>
+                <div class="field">
+                  <label>Goals Conceded / Game</label>
+                  <input type="number" id="home-conceded" value="1.1" step="0.1" min="0">
+                </div>
+              </div>
+            </div>
+
+            <div style="background:rgba(255,106,0,0.03);border:1px solid rgba(255,106,0,0.15);padding:12px;border-radius:2px;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(255,106,0,0.6);margin-bottom:10px;letter-spacing:0.15em;">AWAY TEAM — LAST 5 MATCHES AVG</div>
+              <div class="g2">
+                <div class="field">
+                  <label>Goals Scored / Game</label>
+                  <input type="number" id="away-scored" value="1.2" step="0.1" min="0">
+                </div>
+                <div class="field">
+                  <label>Goals Conceded / Game</label>
+                  <input type="number" id="away-conceded" value="1.4" step="0.1" min="0">
+                </div>
+              </div>
+            </div>
+
+            <div class="g2">
+              <div class="field">
+                <label>League Avg Goals/Game</label>
+                <input type="number" id="league-avg" value="2.7" step="0.1" min="0.1">
+              </div>
+              <div class="field">
+                <label>Venue</label>
+                <select id="venue">
+                  <option value="1.1">Home Advantage (Standard)</option>
+                  <option value="1.0">Neutral Venue</option>
+                  <option value="1.2">Strong Home Record</option>
+                  <option value="0.9">Weak Home Record</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn" onclick="runPoisson()">▶ GENERATE SCORE MATRIX</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Score Probability Heatmap</div>
+          <div id="heatmap-placeholder" style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;padding:40px 0;letter-spacing:0.15em;">
+            [ INPUT TEAM STATS TO GENERATE HEATMAP ]
+          </div>
+          <div id="heatmap-area" style="display:none;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">
+              ROWS = HOME GOALS → | COLS = AWAY GOALS ↓
+            </div>
+            <div class="heatmap-wrap">
+              <table id="heatmap-table"></table>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);">PROBABILITY:</div>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <div style="width:12px;height:12px;background:rgba(0,255,106,0.1);border:1px solid rgba(0,255,106,0.2);"></div>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted);">LOW</span>
+              </div>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <div style="width:12px;height:12px;background:rgba(0,255,106,0.4);border:1px solid rgba(0,255,106,0.5);"></div>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted);">MED</span>
+              </div>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <div style="width:12px;height:12px;background:rgba(0,255,106,0.85);border:1px solid var(--neon);"></div>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted);">HIGH</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="top-picks-card" style="display:none;">
+          <div class="card-title">// Top 5 Predicted Scorelines</div>
+          <div id="top-picks"></div>
+          <div class="stats-row" style="margin-top:12px;">
+            <div class="stat-box">
+              <div class="stat-val" id="stat-home-xg">--</div>
+              <div class="stat-key">Home xG</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="stat-away-xg">--</div>
+              <div class="stat-key">Away xG</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="stat-ou25" style="color:var(--yellow);text-shadow:0 0 8px var(--yellow)">--</div>
+              <div class="stat-key">Over 2.5 Prob</div>
+            </div>
+          </div>
+          <div id="prematch-alerts" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIVE RECALCULATOR -->
+  <div id="panel-live" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Live Match State</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <div class="team-header">
+              <input type="text" class="team-name-input" id="live-home-name" value="HOME" placeholder="Home">
+              <div class="vs-badge">⚽</div>
+              <input type="text" class="team-name-input" id="live-away-name" value="AWAY" placeholder="Away">
+            </div>
+
+            <div class="g3">
+              <div class="field">
+                <label>Home Goals</label>
+                <input type="number" id="live-home-goals" value="0" min="0" max="10">
+              </div>
+              <div class="field">
+                <label>Minute</label>
+                <input type="number" id="live-minute" value="45" min="1" max="90">
+              </div>
+              <div class="field">
+                <label>Away Goals</label>
+                <input type="number" id="live-away-goals" value="0" min="0" max="10">
+              </div>
+            </div>
+
+            <div style="background:rgba(0,255,106,0.03);border:1px solid rgba(0,255,106,0.1);padding:12px;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);margin-bottom:8px;letter-spacing:0.12em;">PRE-MATCH EXPECTED GOALS (from predictor or manual)</div>
+              <div class="g2">
+                <div class="field">
+                  <label>Home xG (Pre-Match)</label>
+                  <input type="number" id="live-home-xg" value="1.5" step="0.1">
+                </div>
+                <div class="field">
+                  <label>Away xG (Pre-Match)</label>
+                  <input type="number" id="live-away-xg" value="1.0" step="0.1">
+                </div>
+              </div>
+            </div>
+
+            <button class="btn" onclick="runLive()">🔴 RECALCULATE LIVE PROBABILITIES</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Live Intelligence</div>
+
+          <div class="live-score-box">
+            <div>
+              <div class="live-team" id="display-home-name">HOME</div>
+            </div>
+            <div>
+              <div class="live-score" id="display-score">0 – 0</div>
+              <div class="minute-display" id="display-minute">⏱ 45'</div>
+            </div>
+            <div>
+              <div class="live-team" id="display-away-name">AWAY</div>
+            </div>
+          </div>
+
+          <div id="live-placeholder" style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;padding:20px 0;letter-spacing:0.15em;">
+            [ HIT RECALCULATE TO ANALYZE ]
+          </div>
+
+          <div id="live-results" style="display:none;">
+            <div class="prob-remaining" id="prob-remaining"></div>
+
+            <div style="margin:12px 0;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);margin-bottom:8px;letter-spacing:0.12em;">REMAINING GOALS PROBABILITY</div>
+              <div class="timeline" id="goal-timeline"></div>
+              <div class="tl-label">
+                <span>0 MORE GOALS</span>
+                <span>1 GOAL</span>
+                <span>2 GOALS</span>
+                <span>3+ GOALS</span>
+              </div>
+            </div>
+
+            <div id="live-top-picks"></div>
+            <div id="live-alerts" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VALUE SCANNER -->
+  <div id="panel-value" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Bookmaker Odds Input</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);line-height:1.7;letter-spacing:0.08em;">
+              Run the Pre-Match Predictor first, then enter bookmaker correct score odds below to find VALUE bets where the bookie is wrong.
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;" id="odds-inputs">
+              <!-- dynamically filled -->
+            </div>
+
+            <div id="odds-placeholder" style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;padding:20px 0;">
+              [ RUN PRE-MATCH PREDICTOR FIRST ]
+            </div>
+
+            <button class="btn" onclick="scanValue()" id="scan-value-btn" style="display:none;">🎯 SCAN FOR VALUE BETS</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Value Intelligence</div>
+          <div id="value-results">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center;padding:40px 0;letter-spacing:0.15em;">
+              [ AWAITING ODDS INPUT ]
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TEAM RADAR -->
+  <div id="panel-radar" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Team Metrics</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <div style="background:rgba(0,255,106,0.03);border:1px solid rgba(0,255,106,0.1);padding:12px;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);margin-bottom:8px;letter-spacing:0.12em;">HOME TEAM METRICS (0-10)</div>
+              <div class="g2" style="gap:8px;">
+                <div class="field"><label>Attack</label><input type="number" id="r-h-att" value="7" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Defense</label><input type="number" id="r-h-def" value="6" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Form</label><input type="number" id="r-h-form" value="7" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Possession</label><input type="number" id="r-h-poss" value="6" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Finishing</label><input type="number" id="r-h-fin" value="6.5" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Discipline</label><input type="number" id="r-h-disc" value="7" min="0" max="10" step="0.5"></div>
+              </div>
+            </div>
+
+            <div style="background:rgba(255,106,0,0.03);border:1px solid rgba(255,106,0,0.15);padding:12px;">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(255,106,0,0.6);margin-bottom:8px;letter-spacing:0.12em;">AWAY TEAM METRICS (0-10)</div>
+              <div class="g2" style="gap:8px;">
+                <div class="field"><label>Attack</label><input type="number" id="r-a-att" value="6" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Defense</label><input type="number" id="r-a-def" value="5" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Form</label><input type="number" id="r-a-form" value="5" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Possession</label><input type="number" id="r-a-poss" value="5" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Finishing</label><input type="number" id="r-a-fin" value="5" min="0" max="10" step="0.5"></div>
+                <div class="field"><label>Discipline</label><input type="number" id="r-a-disc" value="6" min="0" max="10" step="0.5"></div>
+              </div>
+            </div>
+
+            <button class="btn" onclick="drawRadar()">📊 GENERATE RADAR ANALYSIS</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Attack vs Defense Radar</div>
+          <canvas id="radarCanvas" width="320" height="320"></canvas>
+          <div id="radar-analysis" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    CIPHER SCORE // POISSON DISTRIBUTION ENGINE // FOR EDUCATIONAL PURPOSES ONLY // NOT BETTING ADVICE
+  </footer>
+
+</div>
+
+<script>
+// ===== TABS =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ===== POISSON =====
+function poissonProb(lambda, k) {
+  if (lambda <= 0) return k === 0 ? 1 : 0;
+  let logP = -lambda + k * Math.log(lambda);
+  for (let i = 1; i <= k; i++) logP -= Math.log(i);
+  return Math.exp(logP);
+}
+
+function calcExpectedGoals(scored, conceded, leagueAvg, venueAdj) {
+  const attackStr = scored / leagueAvg;
+  const defStr = conceded / leagueAvg;
+  return attackStr * defStr * leagueAvg * venueAdj;
+}
+
+// Global storage for value scanner
+let lastMatrix = null;
+let lastHomeXG = 0, lastAwayXG = 0;
+
+// ===== PRE-MATCH PREDICTOR =====
+function runPoisson() {
+  const homeScored = parseFloat(document.getElementById('home-scored').value) || 1.5;
+  const homeConceded = parseFloat(document.getElementById('home-conceded').value) || 1.2;
+  const awayScored = parseFloat(document.getElementById('away-scored').value) || 1.2;
+  const awayConceded = parseFloat(document.getElementById('away-conceded').value) || 1.3;
+  const leagueAvg = parseFloat(document.getElementById('league-avg').value) || 2.7;
+  const venueAdj = parseFloat(document.getElementById('venue').value) || 1.1;
+  const homeName = document.getElementById('home-name').value || 'HOME';
+  const awayName = document.getElementById('away-name').value || 'AWAY';
+
+  const homeXG = calcExpectedGoals(homeScored, awayConceded, leagueAvg / 2, venueAdj);
+  const awayXG = calcExpectedGoals(awayScored, homeConceded, leagueAvg / 2, 1 / venueAdj);
+
+  lastHomeXG = homeXG;
+  lastAwayXG = awayXG;
+
+  // Build matrix
+  const maxGoals = 6;
+  const matrix = [];
+  for (let h = 0; h <= maxGoals; h++) {
+    matrix[h] = [];
+    for (let a = 0; a <= maxGoals; a++) {
+      matrix[h][a] = poissonProb(homeXG, h) * poissonProb(awayXG, a);
+    }
+  }
+
+  lastMatrix = matrix;
+
+  // Find max for color scaling
+  const flatVals = matrix.flat();
+  const maxProb = Math.max(...flatVals);
+
+  // Build heatmap
+  let tableHTML = '<tr><th></th>';
+  for (let a = 0; a <= maxGoals; a++) tableHTML += `<th>${awayName.slice(0,3).toUpperCase()} ${a}</th>`;
+  tableHTML += '</tr>';
+
+  for (let h = 0; h <= maxGoals; h++) {
+    tableHTML += `<tr><th>${homeName.slice(0,3).toUpperCase()} ${h}</th>`;
+    for (let a = 0; a <= maxGoals; a++) {
+      const prob = matrix[h][a];
+      const intensity = prob / maxProb;
+      const alpha = 0.05 + intensity * 0.85;
+      const r = Math.round(255 * (1 - intensity));
+      const g = 255;
+      const b = Math.round(106 * (1 - intensity * 0.5));
+      const bg = `rgba(${r},${g},${b},${alpha})`;
+      const textColor = intensity > 0.5 ? '#010a06' : '#00ff6a';
+      tableHTML += `<td style="background:${bg};" title="${(prob*100).toFixed(2)}%">
+        <span class="hm-cell" style="color:${textColor}">${(prob*100).toFixed(1)}%</span>
+      </td>`;
+    }
+    tableHTML += '</tr>';
+  }
+
+  document.getElementById('heatmap-table').innerHTML = tableHTML;
+  document.getElementById('heatmap-placeholder').style.display = 'none';
+  document.getElementById('heatmap-area').style.display = 'block';
+  document.getElementById('top-picks-card').style.display = 'block';
+
+  // Top 5 picks
+  const picks = [];
+  for (let h = 0; h <= maxGoals; h++) {
+    for (let a = 0; a <= maxGoals; a++) {
+      picks.push({ score: `${h}-${a}`, prob: matrix[h][a] });
+    }
+  }
+  picks.sort((a, b) => b.prob - a.prob);
+  const top5 = picks.slice(0, 5);
+  const maxPick = top5[0].prob;
+
+  document.getElementById('top-picks').innerHTML = top5.map((p, i) => {
+    const col = i === 0 ? '#00ff6a' : i === 1 ? '#ffd60a' : i === 2 ? '#00cfff' : 'rgba(0,255,106,0.5)';
+    return `
+      <div class="pick-row">
+        <div class="pick-score" style="color:${col};text-shadow:0 0 10px ${col};">${p.score}</div>
+        <div class="pick-bar-wrap">
+          <div class="pick-bar-track">
+            <div class="pick-bar-fill" style="background:${col};box-shadow:0 0 6px ${col};" data-w="${(p.prob/maxPick*100).toFixed(0)}"></div>
+          </div>
+        </div>
+        <div class="pick-pct" style="color:${col}">${(p.prob*100).toFixed(2)}%</div>
+        <div class="pick-odds">≈ ${(1/p.prob).toFixed(1)}x</div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.pick-bar-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 100);
+
+  // Stats
+  const ou25 = 1 - matrix.flat().reduce((sum, v, idx) => {
+    const h = Math.floor(idx / (maxGoals + 1));
+    const a = idx % (maxGoals + 1);
+    return (h + a) <= 2 ? sum + v : sum;
+  }, 0);
+
+  document.getElementById('stat-home-xg').textContent = homeXG.toFixed(2);
+  document.getElementById('stat-away-xg').textContent = awayXG.toFixed(2);
+  document.getElementById('stat-ou25').textContent = (ou25 * 100).toFixed(1) + '%';
+
+  // Alerts
+  const alerts = [];
+  const homeWinProb = picks.filter(p => parseInt(p.score[0]) > parseInt(p.score[2])).reduce((s, p) => s + p.prob, 0);
+  const drawProb = picks.filter(p => p.score[0] === p.score[2]).reduce((s, p) => s + p.prob, 0);
+  const awayWinProb = picks.filter(p => parseInt(p.score[0]) < parseInt(p.score[2])).reduce((s, p) => s + p.prob, 0);
+
+  alerts.push({type:'blue', tag:'MATCH OUTCOME PROBS', msg:`Home Win: ${(homeWinProb*100).toFixed(1)}% | Draw: ${(drawProb*100).toFixed(1)}% | Away Win: ${(awayWinProb*100).toFixed(1)}%`});
+
+  if (homeXG + awayXG > 3) alerts.push({type:'yellow', tag:'HIGH SCORING EXPECTED', msg:`Combined xG of ${(homeXG+awayXG).toFixed(2)} suggests an open, goal-heavy game. Over 2.5 probability: ${(ou25*100).toFixed(1)}%`});
+  else alerts.push({type:'blue', tag:'LOW SCORING EXPECTED', msg:`Combined xG of ${(homeXG+awayXG).toFixed(2)} suggests a tight match. Under 2.5 looks likely.`});
+
+  alerts.push({type:'green', tag:'TOP PREDICTION', msg:`Most probable scoreline: ${top5[0].score} at ${(top5[0].prob*100).toFixed(2)}% probability (fair odds: ${(1/top5[0].prob).toFixed(1)}x)`});
+
+  showAlerts('prematch-alerts', alerts);
+
+  // Populate value scanner
+  populateOddsInputs(top5);
+}
+
+// ===== VALUE SCANNER =====
+function populateOddsInputs(picks) {
+  document.getElementById('odds-placeholder').style.display = 'none';
+  document.getElementById('scan-value-btn').style.display = 'block';
+  document.getElementById('odds-inputs').innerHTML = picks.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:700;color:var(--neon);min-width:40px;">${p.score}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);min-width:60px;">${(p.prob*100).toFixed(2)}% prob</div>
+      <div class="field" style="flex:1;">
+        <input type="number" id="odds-${p.score.replace('-','_')}" placeholder="Bookmaker odds (e.g. 8.50)" step="0.01">
+      </div>
+    </div>
+  `).join('');
+}
+
+function scanValue() {
+  if (!lastMatrix) return;
+
+  const picks = [];
+  for (let h = 0; h <= 6; h++) {
+    for (let a = 0; a <= 6; a++) {
+      picks.push({ score: `${h}-${a}`, prob: lastMatrix[h][a] });
+    }
+  }
+  picks.sort((a, b) => b.prob - a.prob);
+  const top5 = picks.slice(0, 5);
+
+  const results = [];
+  top5.forEach(p => {
+    const inputId = 'odds-' + p.score.replace('-', '_');
+    const el = document.getElementById(inputId);
+    if (!el || !el.value) return;
+    const bookOdds = parseFloat(el.value);
+    if (isNaN(bookOdds) || bookOdds <= 0) return;
+
+    const impliedProb = 1 / bookOdds;
+    const ev = (p.prob * bookOdds) - 1;
+    const edge = ((p.prob - impliedProb) / impliedProb) * 100;
+    const isValue = p.prob > impliedProb;
+
+    results.push({ score: p.score, prob: p.prob, bookOdds, impliedProb, ev, edge, isValue });
+  });
+
+  if (results.length === 0) {
+    document.getElementById('value-results').innerHTML = `<div class="alert alert-yellow"><span class="alert-tag">[NO DATA]</span>Enter at least one bookmaker odds value above.</div>`;
+    return;
+  }
+
+  const valueFound = results.filter(r => r.isValue);
+
+  let html = results.map(r => {
+    const col = r.isValue ? (r.edge > 20 ? '#00ff6a' : '#ffd60a') : '#ff2d55';
+    const badge = r.isValue ? `<span class="value-badge" style="color:${col};border-color:${col};">VALUE +${r.edge.toFixed(1)}%</span>` : `<span class="value-badge" style="color:#ff2d55;border-color:#ff2d5544;">NO EDGE</span>`;
+    return `
+      <div class="pick-row" style="border-color:${col}44;">
+        <div class="pick-score" style="color:${col};text-shadow:0 0 10px ${col};">${r.score}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);">
+            Model: ${(r.prob*100).toFixed(2)}% | Bookie: ${(r.impliedProb*100).toFixed(2)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev.toFixed(3)}
+          </div>
+        </div>
+        ${badge}
+      </div>
+    `;
+  }).join('');
+
+  if (valueFound.length > 0) {
+    html += `<div class="verdict-box" style="color:#00ff6a;border-color:#00ff6a;box-shadow:0 0 20px rgba(0,255,106,0.1);margin-top:12px;">
+      <div class="verdict-big">✓ ${valueFound.length} VALUE BET${valueFound.length > 1 ? 'S' : ''} FOUND</div>
+      <div class="verdict-sub">Bookmaker odds appear mispriced. Math suggests edge exists. Always verify with multiple sources.</div>
+    </div>`;
+  } else {
+    html += `<div class="verdict-box" style="color:#ff2d55;border-color:#ff2d55;margin-top:12px;">
+      <div class="verdict-big">NO VALUE DETECTED</div>
+      <div class="verdict-sub">Bookmaker odds appear to reflect true probabilities or are overpriced. Skip this market.</div>
+    </div>`;
+  }
+
+  document.getElementById('value-results').innerHTML = html;
+}
+
+// ===== LIVE RECALCULATOR =====
+function runLive() {
+  const homeGoals = parseInt(document.getElementById('live-home-goals').value) || 0;
+  const awayGoals = parseInt(document.getElementById('live-away-goals').value) || 0;
+  const minute = parseInt(document.getElementById('live-minute').value) || 45;
+  const homeXG = parseFloat(document.getElementById('live-home-xg').value) || 1.5;
+  const awayXG = parseFloat(document.getElementById('live-away-xg').value) || 1.0;
+  const homeName = document.getElementById('live-home-name').value || 'HOME';
+  const awayName = document.getElementById('live-away-name').value || 'AWAY';
+
+  // Update display
+  document.getElementById('display-home-name').textContent = homeName;
+  document.getElementById('display-away-name').textContent = awayName;
+  document.getElementById('display-score').textContent = `${homeGoals} – ${awayGoals}`;
+  document.getElementById('display-minute').textContent = `⏱ ${minute}'`;
+
+  // Remaining time factor
+  const remainingMins = Math.max(90 - minute, 0);
+  const timeFactor = remainingMins / 90;
+
+  // Remaining expected goals
+  const homeRemXG = Math.max(homeXG * timeFactor - homeGoals * 0.1, homeXG * timeFactor * 0.5);
+  const awayRemXG = Math.max(awayXG * timeFactor - awayGoals * 0.1, awayXG * timeFactor * 0.5);
+
+  // Probability of additional goals
+  const p0goals = poissonProb(homeRemXG + awayRemXG, 0);
+  const p1goals = poissonProb(homeRemXG + awayRemXG, 1);
+  const p2goals = poissonProb(homeRemXG + awayRemXG, 2);
+  const p3plus = 1 - p0goals - p1goals - p2goals;
+
+  // Final score probabilities
+  const maxAdd = 5;
+  const scorePicks = [];
+  for (let addH = 0; addH <= maxAdd; addH++) {
+    for (let addA = 0; addA <= maxAdd; addA++) {
+      const prob = poissonProb(homeRemXG, addH) * poissonProb(awayRemXG, addA);
+      scorePicks.push({
+        score: `${homeGoals + addH}-${awayGoals + addA}`,
+        prob
+      });
+    }
+  }
+  scorePicks.sort((a, b) => b.prob - a.prob);
+  const top5 = scorePicks.slice(0, 5);
+
+  // Comeback prob
+  const isHomeWinning = homeGoals > awayGoals;
+  const isAwayWinning = awayGoals > homeGoals;
+  let comebackProb = 0;
+  if (isHomeWinning) {
+    comebackProb = scorePicks.filter(p => {
+      const [h, a] = p.score.split('-').map(Number);
+      return a >= h;
+    }).reduce((s, p) => s + p.prob, 0);
+  } else if (isAwayWinning) {
+    comebackProb = scorePicks.filter(p => {
+      const [h, a] = p.score.split('-').map(Number);
+      return h >= a;
+    }).reduce((s, p) => s + p.prob, 0);
+  }
+
+  // Prob boxes
+  const probData = [
+    { val: (p0goals*100).toFixed(1) + '%', key: 'NO MORE GOALS', col: '#ffd60a' },
+    { val: (p1goals*100).toFixed(1) + '%', key: '1 MORE GOAL', col: '#00cfff' },
+    { val: (p2goals*100).toFixed(1) + '%', key: '2 MORE GOALS', col: '#00ff6a' },
+    { val: (p3plus*100).toFixed(1) + '%', key: '3+ MORE GOALS', col: '#ff6a00' },
+  ];
+
+  document.getElementById('prob-remaining').innerHTML = probData.map(p => `
+    <div class="prob-box">
+      <div style="position:absolute;top:0;left:0;width:100%;height:2px;background:${p.col};opacity:0.5;"></div>
+      <div class="prob-val" style="color:${p.col};text-shadow:0 0 8px ${p.col};">${p.val}</div>
+      <div class="prob-key">${p.key}</div>
+    </div>
+  `).join('');
+
+  // Timeline
+  const tlData = [p0goals, p1goals, p2goals, p3plus];
+  const tlColors = ['#ffd60a', '#00cfff', '#00ff6a', '#ff6a00'];
+  let tlHtml = '';
+  let leftPct = 0;
+  tlData.forEach((v, i) => {
+    const w = (v * 100).toFixed(1);
+    tlHtml += `<div class="timeline-bar" style="left:${leftPct}%;width:${w}%;background:${tlColors[i]};opacity:0.7;color:#010a06;">${w}%</div>`;
+    leftPct += parseFloat(w);
+  });
+  document.getElementById('goal-timeline').innerHTML = tlHtml;
+
+  // Top picks for remaining
+  const maxP = top5[0].prob;
+  document.getElementById('live-top-picks').innerHTML = `
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);margin:10px 0 6px;letter-spacing:0.12em;">MOST LIKELY FINAL SCORES</div>
+    ${top5.map((p, i) => {
+      const col = i === 0 ? '#00ff6a' : i === 1 ? '#ffd60a' : 'rgba(0,255,106,0.5)';
+      return `
+        <div class="pick-row">
+          <div class="pick-score" style="color:${col};text-shadow:0 0 8px ${col};">${p.score}</div>
+          <div class="pick-bar-wrap">
+            <div class="pick-bar-track">
+              <div class="pick-bar-fill" style="background:${col};" data-w="${(p.prob/maxP*100).toFixed(0)}"></div>
+            </div>
+          </div>
+          <div class="pick-pct" style="color:${col}">${(p.prob*100).toFixed(2)}%</div>
+          <div class="pick-odds">≈${(1/p.prob).toFixed(1)}x</div>
+        </div>
+      `;
+    }).join('')}
+  `;
+
+  setTimeout(() => {
+    document.querySelectorAll('.pick-bar-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 100);
+
+  // Alerts
+  const alerts = [];
+  alerts.push({type:'blue', tag:'TIME REMAINING', msg:`${remainingMins} minutes left. Remaining xG: ${homeName} ${homeRemXG.toFixed(2)} | ${awayName} ${awayRemXG.toFixed(2)}`});
+
+  if (p0goals > 0.5 && minute > 70) alerts.push({type:'yellow', tag:'GAME LIKELY SETTLED', msg:`${(p0goals*100).toFixed(1)}% chance of no more goals. Current score ${homeGoals}-${awayGoals} is most likely final.`});
+
+  if (comebackProb > 0 && (isHomeWinning || isAwayWinning)) {
+    const loser = isHomeWinning ? awayName : homeName;
+    alerts.push({type: comebackProb > 0.3 ? 'green' : 'red', tag:'COMEBACK PROBABILITY', msg:`${loser} comeback probability: ${(comebackProb*100).toFixed(1)}%. ${comebackProb > 0.3 ? 'Mathematically possible.' : 'Unlikely but not impossible.'}`});
+  }
+
+  if (minute < 30) alerts.push({type:'blue', tag:'EARLY GAME CAUTION', msg:'Early minutes — probabilities highly volatile. Live odds move fast. Monitor closely.'});
+
+  document.getElementById('live-placeholder').style.display = 'none';
+  document.getElementById('live-results').style.display = 'block';
+  showAlerts('live-alerts', alerts);
+}
+
+// ===== RADAR =====
+function drawRadar() {
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = Math.min(canvas.offsetWidth, 320);
+  canvas.width = size;
+  canvas.height = size;
+
+  const labels = ['ATTACK', 'DEFENSE', 'FORM', 'POSSESSION', 'FINISHING', 'DISCIPLINE'];
+  const homeVals = [
+    parseFloat(document.getElementById('r-h-att').value) / 10,
+    parseFloat(document.getElementById('r-h-def').value) / 10,
+    parseFloat(document.getElementById('r-h-form').value) / 10,
+    parseFloat(document.getElementById('r-h-poss').value) / 10,
+    parseFloat(document.getElementById('r-h-fin').value) / 10,
+    parseFloat(document.getElementById('r-h-disc').value) / 10,
+  ];
+  const awayVals = [
+    parseFloat(document.getElementById('r-a-att').value) / 10,
+    parseFloat(document.getElementById('r-a-def').value) / 10,
+    parseFloat(document.getElementById('r-a-form').value) / 10,
+    parseFloat(document.getElementById('r-a-poss').value) / 10,
+    parseFloat(document.getElementById('r-a-fin').value) / 10,
+    parseFloat(document.getElementById('r-a-disc').value) / 10,
+  ];
+
+  const cx = size / 2, cy = size / 2;
+  const radius = size * 0.36;
+  const n = labels.length;
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Grid rings
+  for (let r = 1; r <= 5; r++) {
+    const rr = radius * r / 5;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(0,255,106,0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Spokes
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
+    ctx.strokeStyle = 'rgba(0,255,106,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw team polygons
+  function drawPoly(vals, color, alpha) {
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + radius * v * Math.cos(angle);
+      const y = cy + radius * v * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = color.replace('1)', `${alpha})`);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 8; ctx.shadowColor = color;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  drawPoly(homeVals, 'rgba(0,255,106,1)', 0.15);
+  drawPoly(awayVals, 'rgba(255,106,0,1)', 0.12);
+
+  // Labels
+  ctx.font = `bold ${size * 0.032}px 'Share Tech Mono'`;
+  ctx.fillStyle = 'rgba(0,255,106,0.7)';
+  ctx.textAlign = 'center';
+  labels.forEach((l, i) => {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + (radius + size * 0.07) * Math.cos(angle);
+    const y = cy + (radius + size * 0.07) * Math.sin(angle);
+    ctx.fillText(l, x, y + 4);
+  });
+
+  // Legend
+  ctx.font = `bold ${size * 0.034}px 'Share Tech Mono'`;
+  ctx.fillStyle = '#00ff6a';
+  ctx.textAlign = 'left';
+  ctx.fillText('■ HOME', size * 0.06, size * 0.94);
+  ctx.fillStyle = '#ff6a00';
+  ctx.fillText('■ AWAY', size * 0.4, size * 0.94);
+
+  // Analysis
+  const homeScore = homeVals.reduce((a, b) => a + b, 0) / n * 10;
+  const awayScore = awayVals.reduce((a, b) => a + b, 0) / n * 10;
+  const diff = homeScore - awayScore;
+
+  const alerts = [];
+  alerts.push({type:'blue', tag:'OVERALL RATING', msg:`Home: ${homeScore.toFixed(1)}/10 | Away: ${awayScore.toFixed(1)}/10`});
+
+  if (diff > 1.5) alerts.push({type:'green', tag:'HOME DOMINANCE', msg:`Home team significantly stronger. Expect home-controlled match. Consider home win or home-scoring scorelines.`});
+  else if (diff < -1.5) alerts.push({type:'red', tag:'AWAY STRENGTH', msg:`Away team metrics suggest upset potential. Don't dismiss away win or away-scoring scorelines.`});
+  else alerts.push({type:'yellow', tag:'EVENLY MATCHED', msg:`Teams closely rated. Draw or tight scorelines like 1-0, 0-1, 1-1 become more probable.`});
+
+  if (homeVals[0] > 0.7 && awayVals[1] < 0.5) alerts.push({type:'green', tag:'ATTACKING MISMATCH', msg:`Strong home attack vs weak away defense. High home goal probability. Consider 2-0, 2-1, 3-0.`});
+  if (awayVals[0] > 0.7 && homeVals[1] < 0.5) alerts.push({type:'yellow', tag:'AWAY ATTACK THREAT', msg:`Strong away attack vs weak home defense. Away goals highly probable. Consider 1-1, 1-2.`});
+
+  showAlerts('radar-analysis', alerts);
+}
+
+// ===== HELPERS =====
+function showAlerts(id, alerts) {
+  document.getElementById(id).innerHTML = alerts.map(a => `
+    <div class="alert alert-${a.type}">
+      <span class="alert-tag">[${a.tag}]</span>${a.msg}
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

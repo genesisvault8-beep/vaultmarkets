@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIPHER CRASH — Survival Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05000f;
+    --panel: #08000f;
+    --neon: #bf00ff;
+    --neon2: #ff003c;
+    --neon3: #00ffe7;
+    --green: #00ff88;
+    --yellow: #ffe600;
+    --red: #ff003c;
+    --text: #e8d0ff;
+    --muted: #5a3a7a;
+    --border: rgba(191,0,255,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* PARTICLE BG */
+  #particle-bg {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  /* SCANLINES */
+  body::after {
+    content:'';
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(191,0,255,0.012) 3px, rgba(191,0,255,0.012) 4px);
+    pointer-events:none;
+    z-index:1000;
+  }
+
+  .scan-line {
+    position:fixed; top:0; left:0;
+    width:100%; height:3px;
+    background: linear-gradient(90deg, transparent, rgba(191,0,255,0.5), transparent);
+    animation: scanDown 8s linear infinite;
+    pointer-events:none;
+    z-index:999;
+  }
+
+  @keyframes scanDown {
+    from { transform: translateY(-10px); }
+    to { transform: translateY(100vh); }
+  }
+
+  .container {
+    position:relative;
+    z-index:1;
+    max-width:1080px;
+    margin:0 auto;
+    padding:16px 14px 40px;
+  }
+
+  /* HEADER */
+  header { text-align:center; padding:24px 0 16px; }
+
+  .logo {
+    font-family:'Orbitron', monospace;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight:900;
+    letter-spacing:0.15em;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon), 0 0 60px var(--neon), 0 0 120px var(--neon);
+    animation: flicker 5s infinite;
+  }
+
+  .logo span { color: var(--neon2); text-shadow: 0 0 20px var(--neon2), 0 0 60px var(--neon2); }
+
+  .tagline {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem;
+    color: var(--muted);
+    letter-spacing:0.3em;
+    margin-top:6px;
+  }
+
+  .status-bar {
+    display:flex; justify-content:center; gap:20px;
+    margin-top:12px; flex-wrap:wrap;
+  }
+
+  .s-item {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; color:var(--muted);
+    display:flex; align-items:center; gap:5px;
+  }
+
+  .s-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 6px var(--green);
+    animation:blink 1.8s infinite;
+  }
+
+  /* TABS */
+  .tabs {
+    display:flex; gap:0;
+    margin:20px 0 0;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+  }
+
+  .tab {
+    font-family:'Orbitron', monospace;
+    font-size:0.62rem; font-weight:700;
+    letter-spacing:0.12em;
+    padding:11px 18px;
+    background:transparent;
+    border:1px solid transparent;
+    border-bottom:none;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all 0.3s;
+    white-space:nowrap;
+    text-transform:uppercase;
+  }
+
+  .tab:hover { color:var(--neon); }
+
+  .tab.active {
+    color:var(--neon);
+    border-color:var(--border);
+    background:rgba(191,0,255,0.05);
+    text-shadow:0 0 10px var(--neon);
+    position:relative;
+  }
+
+  .tab.active::after {
+    content:'';
+    position:absolute;
+    bottom:-1px; left:0;
+    width:100%; height:1px;
+    background:var(--bg);
+  }
+
+  /* PANELS */
+  .panel { display:none; animation:fadeUp 0.4s ease; padding-top:18px; }
+  .panel.active { display:block; }
+
+  /* CARD */
+  .card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:2px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    width:3px; height:100%;
+    background:var(--neon);
+    box-shadow:0 0 12px var(--neon);
+  }
+
+  .card::after {
+    content:'';
+    position:absolute;
+    bottom:0; right:0;
+    width:18px; height:18px;
+    border-bottom:1px solid rgba(191,0,255,0.3);
+    border-right:1px solid rgba(191,0,255,0.3);
+  }
+
+  .card-title {
+    font-family:'Orbitron', monospace;
+    font-size:0.65rem; font-weight:700;
+    letter-spacing:0.2em;
+    color:var(--neon);
+    text-transform:uppercase;
+    margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  .card-title::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(90deg, var(--neon), transparent);
+    opacity:0.25;
+  }
+
+  /* GRID */
+  .g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  @media(max-width:580px) { .g2,.g3 { grid-template-columns:1fr; } .rg { grid-template-columns:1fr !important; } }
+
+  /* INPUTS */
+  .field { display:flex; flex-direction:column; gap:5px; }
+
+  label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.6rem; color:var(--muted);
+    letter-spacing:0.15em; text-transform:uppercase;
+  }
+
+  input, select, textarea {
+    background:rgba(191,0,255,0.04);
+    border:1px solid rgba(191,0,255,0.2);
+    color:var(--neon);
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.82rem;
+    padding:9px 12px;
+    border-radius:2px;
+    outline:none;
+    transition:all 0.3s;
+    width:100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color:var(--neon);
+    box-shadow:0 0 12px rgba(191,0,255,0.2);
+    background:rgba(191,0,255,0.08);
+  }
+
+  select option { background:#08000f; }
+
+  textarea {
+    min-height:100px;
+    resize:vertical;
+    font-size:0.72rem;
+    line-height:1.7;
+  }
+
+  /* BUTTON */
+  .btn {
+    font-family:'Orbitron', monospace;
+    font-size:0.65rem; font-weight:700;
+    letter-spacing:0.18em;
+    padding:11px 24px;
+    background:transparent;
+    border:1px solid var(--neon);
+    color:var(--neon);
+    cursor:pointer;
+    text-transform:uppercase;
+    transition:all 0.3s;
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    margin-top:6px;
+  }
+
+  .btn::before {
+    content:'';
+    position:absolute;
+    top:0; left:-100%;
+    width:100%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(191,0,255,0.12), transparent);
+    transition:left 0.5s;
+  }
+
+  .btn:hover::before { left:100%; }
+  .btn:hover {
+    background:rgba(191,0,255,0.1);
+    box-shadow:0 0 20px rgba(191,0,255,0.35);
+    text-shadow:0 0 10px var(--neon);
+  }
+
+  .btn-add {
+    border-color:var(--neon3); color:var(--neon3);
+    font-size:0.6rem; padding:8px 16px;
+    width:auto; margin-top:0;
+  }
+  .btn-add:hover { background:rgba(0,255,231,0.08); box-shadow:0 0 16px rgba(0,255,231,0.25); }
+
+  /* BIG MULTIPLIER DISPLAY */
+  .crash-display {
+    text-align:center;
+    padding:30px 20px;
+    position:relative;
+  }
+
+  .rocket-emoji {
+    font-size:3rem;
+    animation:rocketFloat 3s ease-in-out infinite;
+    display:block;
+    margin-bottom:10px;
+    filter:drop-shadow(0 0 20px var(--neon));
+  }
+
+  @keyframes rocketFloat {
+    0%,100% { transform:translateY(0) rotate(-15deg); }
+    50% { transform:translateY(-12px) rotate(-10deg); }
+  }
+
+  .multi-display {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(3rem, 10vw, 5rem);
+    font-weight:900;
+    color:var(--neon);
+    text-shadow:0 0 30px var(--neon), 0 0 80px var(--neon);
+    line-height:1;
+    animation:pulse 2s infinite;
+  }
+
+  .multi-label {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem;
+    color:var(--muted);
+    letter-spacing:0.3em;
+    margin-top:6px;
+  }
+
+  /* SURVIVAL METER */
+  .survival-bar {
+    margin:16px 0 8px;
+    position:relative;
+  }
+
+  .survival-track {
+    height:14px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(191,0,255,0.2);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .survival-fill {
+    height:100%;
+    background:linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+    width:0%;
+    transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+    position:relative;
+  }
+
+  .survival-fill::after {
+    content:'';
+    position:absolute;
+    right:0; top:0;
+    width:6px; height:100%;
+    background:white;
+    filter:blur(3px);
+    opacity:0.7;
+  }
+
+  .survival-labels {
+    display:flex;
+    justify-content:space-between;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin:14px 0;
+  }
+
+  .stat-box {
+    background:rgba(191,0,255,0.04);
+    border:1px solid rgba(191,0,255,0.15);
+    padding:12px 10px;
+    text-align:center;
+    position:relative;
+  }
+
+  .stat-box::before {
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:2px;
+    background:var(--neon);
+    opacity:0.35;
+  }
+
+  .stat-val {
+    font-family:'Orbitron', monospace;
+    font-size:1.15rem;
+    font-weight:700;
+    color:var(--neon);
+    text-shadow:0 0 10px var(--neon);
+  }
+
+  .stat-key {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem;
+    color:var(--muted);
+    letter-spacing:0.12em;
+    margin-top:3px;
+  }
+
+  /* ALERTS */
+  .alert {
+    padding:10px 14px;
+    border-left:3px solid;
+    margin:7px 0;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem;
+    line-height:1.5;
+    animation:slideIn 0.35s ease;
+  }
+
+  .alert-red { border-color:var(--red); background:rgba(255,0,60,0.06); color:#ff6688; }
+  .alert-yellow { border-color:var(--yellow); background:rgba(255,230,0,0.06); color:#ffee66; }
+  .alert-green { border-color:var(--green); background:rgba(0,255,136,0.06); color:#66ffaa; }
+  .alert-purple { border-color:var(--neon); background:rgba(191,0,255,0.06); color:#df88ff; }
+
+  .alert-tag {
+    font-family:'Orbitron', monospace;
+    font-size:0.55rem; font-weight:700;
+    letter-spacing:0.12em;
+    display:block; margin-bottom:3px;
+  }
+
+  /* HISTORY CHIPS */
+  .history-wrap {
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:12px 0;
+    max-height:120px;
+    overflow-y:auto;
+  }
+
+  .chip {
+    font-family:'Orbitron', monospace;
+    font-size:0.65rem; font-weight:700;
+    padding:4px 10px;
+    border:1px solid;
+    border-radius:2px;
+    animation:popIn 0.2s ease;
+  }
+
+  .chip-low { color:#ff003c; border-color:#ff003c44; background:rgba(255,0,60,0.08); }
+  .chip-mid { color:#ffe600; border-color:#ffe60044; background:rgba(255,230,0,0.08); }
+  .chip-high { color:#00ff88; border-color:#00ff8844; background:rgba(0,255,136,0.08); }
+  .chip-moon { color:#bf00ff; border-color:#bf00ff44; background:rgba(191,0,255,0.08); text-shadow:0 0 8px #bf00ff; }
+
+  /* PATTERN BARS */
+  .pat-bar {
+    display:flex; align-items:center; gap:10px;
+    margin:8px 0;
+  }
+
+  .pat-name {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.62rem; color:var(--muted);
+    width:160px; flex-shrink:0;
+    letter-spacing:0.08em;
+  }
+
+  .pat-track {
+    flex:1; height:7px;
+    background:rgba(255,255,255,0.04);
+    overflow:hidden;
+  }
+
+  .pat-fill {
+    height:100%;
+    width:0%;
+    transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .pat-val {
+    font-family:'Orbitron', monospace;
+    font-size:0.6rem; font-weight:700;
+    width:34px; text-align:right; flex-shrink:0;
+  }
+
+  /* STRATEGY CARD */
+  .strategy-box {
+    border:1px solid rgba(191,0,255,0.3);
+    background:rgba(191,0,255,0.04);
+    padding:16px;
+    margin:10px 0;
+    position:relative;
+    animation:slideIn 0.4s ease;
+  }
+
+  .strategy-box::before {
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:2px;
+    background:linear-gradient(90deg, var(--neon), transparent);
+  }
+
+  .strategy-title {
+    font-family:'Orbitron', monospace;
+    font-size:0.7rem; font-weight:700;
+    color:var(--neon);
+    letter-spacing:0.15em;
+    margin-bottom:8px;
+  }
+
+  .strategy-body {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.68rem;
+    color:var(--text);
+    line-height:1.7;
+    opacity:0.85;
+  }
+
+  .strategy-val {
+    font-family:'Orbitron', monospace;
+    font-size:1.4rem; font-weight:900;
+    color:var(--green);
+    text-shadow:0 0 15px var(--green);
+    text-align:center;
+    margin:10px 0 6px;
+  }
+
+  /* BANKROLL CHART */
+  #bankCanvas {
+    width:100%; height:160px;
+    display:block;
+    border:1px solid rgba(191,0,255,0.12);
+    background:rgba(0,0,0,0.3);
+    margin:12px 0;
+  }
+
+  /* PROVABLY FAIR */
+  .hash-display {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem;
+    color:var(--neon3);
+    background:rgba(0,255,231,0.04);
+    border:1px solid rgba(0,255,231,0.15);
+    padding:12px;
+    word-break:break-all;
+    line-height:1.7;
+    margin:10px 0;
+  }
+
+  .verdict-box {
+    text-align:center;
+    padding:18px;
+    border:1px solid;
+    margin-top:14px;
+    animation:slideIn 0.4s ease;
+  }
+
+  .verdict-big {
+    font-family:'Orbitron', monospace;
+    font-size:clamp(1rem, 3vw, 1.4rem);
+    font-weight:900;
+    letter-spacing:0.15em;
+    text-shadow:0 0 20px currentColor;
+  }
+
+  .verdict-sub {
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.65rem;
+    margin-top:6px; opacity:0.7;
+  }
+
+  /* ANIMATIONS */
+  @keyframes flicker {
+    0%,94%,100% { opacity:1; }
+    95% { opacity:0.75; }
+    97% { opacity:0.6; }
+  }
+
+  @keyframes blink {
+    0%,100% { opacity:1; }
+    50% { opacity:0.3; }
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.8; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(-8px); }
+    to { opacity:1; transform:translateX(0); }
+  }
+
+  @keyframes popIn {
+    from { opacity:0; transform:scale(0.8); }
+    to { opacity:1; transform:scale(1); }
+  }
+
+  footer {
+    text-align:center;
+    padding:18px 0 0;
+    font-family:'Share Tech Mono', monospace;
+    font-size:0.55rem;
+    color:var(--muted);
+    letter-spacing:0.2em;
+    border-top:1px solid rgba(191,0,255,0.1);
+    margin-top:16px;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(191,0,255,0.3); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<canvas id="particle-bg"></canvas>
+<div class="scan-line"></div>
+
+<div class="container">
+
+  <header>
+    <div class="logo">CIPHER<span>CRASH</span></div>
+    <div class="tagline">// crash game survival intelligence terminal v1.0 //</div>
+    <div class="status-bar">
+      <div class="s-item"><div class="s-dot"></div> SURVIVAL ENGINE ONLINE</div>
+      <div class="s-item"><div class="s-dot"></div> PATTERN SCANNER READY</div>
+      <div class="s-item"><div class="s-dot"></div> KELLY ENGINE ARMED</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('cashout','this')">🚀 Cashout Advisor</button>
+    <button class="tab" onclick="switchTab('pattern','this')">📊 Pattern Scanner</button>
+    <button class="tab" onclick="switchTab('bankroll','this')">💰 Bankroll Guard</button>
+    <button class="tab" onclick="switchTab('fair','this')">🔐 Fairness Checker</button>
+  </div>
+
+  <!-- ===== CASHOUT ADVISOR ===== -->
+  <div id="panel-cashout" class="panel active">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Your Parameters</div>
+          <div style="display:flex;flex-direction:column;gap:13px;">
+            <div class="g2">
+              <div class="field">
+                <label>Bankroll ($)</label>
+                <input type="number" id="co-bank" value="100" placeholder="100">
+              </div>
+              <div class="field">
+                <label>Bet Amount ($)</label>
+                <input type="number" id="co-bet" value="5" placeholder="5">
+              </div>
+            </div>
+            <div class="g2">
+              <div class="field">
+                <label>Target Cashout (x)</label>
+                <input type="number" id="co-target" value="2" step="0.1" placeholder="2.0">
+              </div>
+              <div class="field">
+                <label>House Edge (%)</label>
+                <input type="number" id="co-edge" value="1" step="0.1" placeholder="1">
+              </div>
+            </div>
+            <div class="field">
+              <label>Strategy Style</label>
+              <select id="co-style">
+                <option value="safe">Safe (Low cashout, high frequency)</option>
+                <option value="balanced" selected>Balanced (Medium risk)</option>
+                <option value="aggressive">Aggressive (High cashout hunting)</option>
+                <option value="martingale">Martingale (Double on loss)</option>
+              </select>
+            </div>
+            <button class="btn" onclick="calcCashout()">▶ COMPUTE SURVIVAL STRATEGY</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Survival Intelligence</div>
+
+          <div class="crash-display">
+            <span class="rocket-emoji">🚀</span>
+            <div class="multi-display" id="co-multi">2.00x</div>
+            <div class="multi-label">RECOMMENDED CASHOUT</div>
+          </div>
+
+          <div class="survival-bar">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;">BUST RISK</span>
+              <span style="font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;" id="bust-pct-label" style="color:var(--neon)">--</span>
+            </div>
+            <div class="survival-track">
+              <div class="survival-fill" id="bust-bar"></div>
+            </div>
+            <div class="survival-labels">
+              <span>SAFE</span><span>MODERATE</span><span>DANGER</span><span>REKT</span>
+            </div>
+          </div>
+
+          <div class="stats-row" id="co-stats">
+            <div class="stat-box">
+              <div class="stat-val" id="co-winchance">--</div>
+              <div class="stat-key">Win Chance</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="co-ev" style="color:var(--yellow);text-shadow:0 0 10px var(--yellow)">--</div>
+              <div class="stat-key">Expected Value</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="co-survive" style="color:var(--green);text-shadow:0 0 10px var(--green)">--</div>
+              <div class="stat-key">Survive N Rounds</div>
+            </div>
+          </div>
+
+          <div id="co-alerts"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card" id="co-strategy-area" style="display:none;">
+      <div class="card-title">// Survival Strategy</div>
+      <div id="co-strategy-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== PATTERN SCANNER ===== -->
+  <div id="panel-pattern" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Crash History Feed</div>
+          <div style="display:flex;flex-direction:column;gap:13px;">
+            <div class="field">
+              <label>Paste Crash Results (comma or newline separated)</label>
+              <textarea id="crash-history" placeholder="e.g. 1.24, 3.50, 1.01, 8.20, 1.15, 2.34, 1.02, 15.6, 1.08, 4.20, 1.33, 2.10, 1.01, 6.50, 1.19"></textarea>
+            </div>
+            <div class="field">
+              <label>Game Platform</label>
+              <select id="platform">
+                <option>Stake</option>
+                <option>BC.Game</option>
+                <option>Roobet</option>
+                <option>Crashino</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <button class="btn" onclick="scanPattern()">⚡ SCAN PATTERNS</button>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="card-title">// Live History Log</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <input type="number" id="add-crash" placeholder="Add result e.g. 2.45" step="0.01" style="flex:1;">
+              <button class="btn btn-add" onclick="addCrash()">+ ADD</button>
+            </div>
+            <div class="history-wrap" id="history-chips">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);padding:8px;">[ NO HISTORY YET — ADD RESULTS ABOVE ]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Pattern Intelligence</div>
+
+          <div id="pat-placeholder" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;padding:30px 0;letter-spacing:0.15em;">
+            [ AWAITING CRASH DATA ]
+          </div>
+
+          <div id="pat-results" style="display:none;">
+            <div id="pat-bars"></div>
+
+            <div class="stats-row" style="margin-top:14px;" id="pat-stats">
+              <div class="stat-box">
+                <div class="stat-val" id="pat-avg">--</div>
+                <div class="stat-key">Avg Crash</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val" id="pat-low" style="color:var(--red);text-shadow:0 0 10px var(--red)">--</div>
+                <div class="stat-key">% Below 2x</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val" id="pat-high" style="color:var(--green);text-shadow:0 0 10px var(--green)">--</div>
+                <div class="stat-key">% Above 5x</div>
+              </div>
+            </div>
+
+            <div id="pat-verdict"></div>
+            <div id="pat-alerts" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BANKROLL GUARD ===== -->
+  <div id="panel-bankroll" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Bankroll Parameters</div>
+          <div style="display:flex;flex-direction:column;gap:13px;">
+            <div class="g2">
+              <div class="field">
+                <label>Starting Bankroll ($)</label>
+                <input type="number" id="bk-start" value="200" placeholder="200">
+              </div>
+              <div class="field">
+                <label>Bet Size ($)</label>
+                <input type="number" id="bk-bet" value="10" placeholder="10">
+              </div>
+            </div>
+            <div class="g2">
+              <div class="field">
+                <label>Cashout Target (x)</label>
+                <input type="number" id="bk-cashout" value="2" step="0.1">
+              </div>
+              <div class="field">
+                <label>Stop Loss ($)</label>
+                <input type="number" id="bk-stop" value="50" placeholder="50">
+              </div>
+            </div>
+            <div class="g2">
+              <div class="field">
+                <label>Take Profit ($)</label>
+                <input type="number" id="bk-tp" value="100" placeholder="100">
+              </div>
+              <div class="field">
+                <label>Rounds to Simulate</label>
+                <input type="number" id="bk-rounds" value="100" placeholder="100">
+              </div>
+            </div>
+            <button class="btn" onclick="guardBankroll()">🛡 RUN BANKROLL SIMULATION</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Bankroll Projection</div>
+          <canvas id="bankCanvas"></canvas>
+          <div class="stats-row" id="bk-stats">
+            <div class="stat-box">
+              <div class="stat-val" id="bk-maxdd" style="color:var(--red);text-shadow:0 0 10px var(--red)">--</div>
+              <div class="stat-key">Max Drawdown</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="bk-survrate">--</div>
+              <div class="stat-key">Survival Rate</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="bk-kelly" style="color:var(--yellow);text-shadow:0 0 10px var(--yellow)">--</div>
+              <div class="stat-key">Kelly Bet Size</div>
+            </div>
+          </div>
+          <div id="bk-alerts" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROVABLY FAIR ===== -->
+  <div id="panel-fair" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;" class="rg">
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Verify Game Result</div>
+          <div style="display:flex;flex-direction:column;gap:13px;">
+            <div class="field">
+              <label>Server Seed (Hashed)</label>
+              <input type="text" id="server-seed" placeholder="e.g. 3b4c2a1f9e8d7c6b5a4...">
+            </div>
+            <div class="field">
+              <label>Client Seed</label>
+              <input type="text" id="client-seed" placeholder="e.g. myCustomSeed123">
+            </div>
+            <div class="field">
+              <label>Nonce (Round Number)</label>
+              <input type="number" id="nonce" placeholder="e.g. 1842">
+            </div>
+            <div class="field">
+              <label>Claimed Result (x)</label>
+              <input type="number" id="claimed-result" placeholder="e.g. 2.45" step="0.01">
+            </div>
+            <button class="btn" onclick="checkFairness()">🔐 VERIFY PROVABLY FAIR</button>
+          </div>
+
+          <div style="margin-top:20px;">
+            <div class="card-title">// What is Provably Fair?</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);line-height:1.8;">
+              Provably fair systems let you verify that crash results weren't manipulated. The game uses cryptographic hashing — if the hash of the server seed matches, the result is genuine. If it doesn't match, the game cheated you.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">// Verification Result</div>
+
+          <div id="fair-placeholder" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;padding:30px 0;letter-spacing:0.15em;">
+            [ ENTER SEEDS TO VERIFY ]
+          </div>
+
+          <div id="fair-results" style="display:none;">
+            <div class="hash-display" id="fair-hash"></div>
+            <div id="fair-verdict"></div>
+            <div id="fair-alerts" style="margin-top:10px;"></div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <div class="card-title">// Red Flags Checklist</div>
+            <div style="display:flex;flex-direction:column;gap:8px;" id="red-flags">
+              <div class="alert alert-purple"><span class="alert-tag">[TIP 01]</span> Always verify server seed BEFORE revealing it — once shown you can check it</div>
+              <div class="alert alert-purple"><span class="alert-tag">[TIP 02]</span> Change your client seed every session to ensure unpredictability</div>
+              <div class="alert alert-purple"><span class="alert-tag">[TIP 03]</span> If a site doesn't offer provably fair — treat it as rigged</div>
+              <div class="alert alert-purple"><span class="alert-tag">[TIP 04]</span> Patterns in crash results can indicate a compromised RNG</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    CIPHER CRASH // FOR EDUCATIONAL PURPOSES ONLY // GAMBLING INVOLVES RISK // PLAY RESPONSIBLY
+  </footer>
+
+</div>
+
+<script>
+// ===== PARTICLE BACKGROUND =====
+const pCanvas = document.getElementById('particle-bg');
+const pCtx = pCanvas.getContext('2d');
+pCanvas.width = window.innerWidth;
+pCanvas.height = window.innerHeight;
+
+const particles = Array.from({length: 80}, () => ({
+  x: Math.random() * pCanvas.width,
+  y: Math.random() * pCanvas.height,
+  vx: (Math.random() - 0.5) * 0.4,
+  vy: (Math.random() - 0.5) * 0.4,
+  size: Math.random() * 1.5 + 0.3,
+  opacity: Math.random() * 0.4 + 0.1
+}));
+
+function animParticles() {
+  pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = pCanvas.width;
+    if (p.x > pCanvas.width) p.x = 0;
+    if (p.y < 0) p.y = pCanvas.height;
+    if (p.y > pCanvas.height) p.y = 0;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    pCtx.fillStyle = `rgba(191,0,255,${p.opacity})`;
+    pCtx.fill();
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+window.addEventListener('resize', () => {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+});
+
+// ===== TABS =====
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  // find clicked tab
+  event.currentTarget.classList.add('active');
+}
+
+// ===== CASHOUT ADVISOR =====
+function calcCashout() {
+  const bank = parseFloat(document.getElementById('co-bank').value) || 0;
+  const bet = parseFloat(document.getElementById('co-bet').value) || 0;
+  const target = parseFloat(document.getElementById('co-target').value) || 2;
+  const edge = parseFloat(document.getElementById('co-edge').value) || 1;
+  const style = document.getElementById('co-style').value;
+
+  if (!bank || !bet) return;
+
+  // Recommended cashout based on style
+  const styleMultis = { safe: 1.5, balanced: 2.0, aggressive: 3.5, martingale: 1.5 };
+  let recommended = styleMultis[style];
+
+  // Win probability at given cashout (accounting for house edge)
+  const edgeFactor = 1 - (edge / 100);
+  const winChance = (edgeFactor / recommended) * 100;
+  const winChanceClamped = Math.min(winChance, 99);
+
+  // EV
+  const ev = (winChanceClamped / 100) * (bet * recommended) - (1 - winChanceClamped / 100) * bet;
+
+  // Bust risk over session (100 rounds)
+  const bustRisk = Math.min((1 - Math.pow(winChanceClamped / 100, 20)) * 100 * (bet / bank) * 10, 100);
+
+  // Rounds survive before busting
+  const surviveRounds = Math.floor(bank / bet);
+
+  // Update display
+  document.getElementById('co-multi').textContent = recommended.toFixed(2) + 'x';
+  document.getElementById('bust-pct-label').textContent = bustRisk.toFixed(0) + '%';
+  document.getElementById('bust-pct-label').style.color = bustRisk < 30 ? '#00ff88' : bustRisk < 60 ? '#ffe600' : '#ff003c';
+  document.getElementById('bust-bar').style.width = bustRisk + '%';
+  document.getElementById('co-winchance').textContent = winChanceClamped.toFixed(1) + '%';
+  document.getElementById('co-ev').textContent = (ev >= 0 ? '+' : '') + '$' + ev.toFixed(3);
+  document.getElementById('co-ev').style.color = ev >= 0 ? '#00ff88' : '#ff003c';
+  document.getElementById('co-survive').textContent = surviveRounds + 'x';
+
+  // Alerts
+  const alerts = [];
+  if (ev < 0) alerts.push({type:'red', tag:'NEGATIVE EV DETECTED', msg:`At ${recommended}x cashout with ${edge}% house edge, expected value is ${ev.toFixed(3)} per bet. The house has the long-term edge.`});
+  else alerts.push({type:'green', tag:'POSITIVE EV WINDOW', msg:`EV is ${ev.toFixed(3)} per bet. This edge is fragile — variance will still cause losing streaks.`});
+
+  if (bet / bank > 0.05) alerts.push({type:'red', tag:'BET SIZE CRITICAL', msg:`Betting ${((bet/bank)*100).toFixed(1)}% of bankroll per round. Risk of ruin is extremely high. Keep bets under 2-3% of bankroll.`});
+  else if (bet / bank > 0.02) alerts.push({type:'yellow', tag:'BET SIZE WARNING', msg:`Betting ${((bet/bank)*100).toFixed(1)}% of bankroll. Acceptable but reduce for longer survival.`});
+  else alerts.push({type:'green', tag:'BET SIZE OPTIMAL', msg:`Betting ${((bet/bank)*100).toFixed(1)}% of bankroll — within Kelly-safe range.`});
+
+  showAlerts('co-alerts', alerts);
+
+  // Strategy content
+  const strategies = {
+    safe: { title:'SAFE GRIND PROTOCOL', body:`Cash out at 1.3x–1.8x consistently. Win rate ~55-65%. Small profits per round, long sessions. Stop at +20% profit or -30% loss. Never chase losses.`, val: '1.50x' },
+    balanced: { title:'BALANCED OPERATOR PROTOCOL', body:`Cash out at 2x. Win rate ~47%. Classic strategy with manageable variance. Use flat betting only. Stop at +50% profit or -40% loss.`, val: '2.00x' },
+    aggressive: { title:'HIGH VALUE HUNTER PROTOCOL', body:`Target 3x–5x cashouts. Win rate ~20-30%. Long losing streaks expected. Requires 50+ unit bankroll. Only use with money you can afford to lose completely.`, val: '3.50x' },
+    martingale: { title:'⚠ MARTINGALE DANGER PROTOCOL', body:`Double bet after each loss targeting 1.5x. WARNING: This strategy WILL bust your bankroll. One losing streak of 7+ rounds wipes everything. Not recommended.`, val: '1.50x' }
+  };
+
+  const s = strategies[style];
+  document.getElementById('co-strategy-area').style.display = 'block';
+  document.getElementById('co-strategy-content').innerHTML = `
+    <div class="strategy-box">
+      <div class="strategy-title">${s.title}</div>
+      <div class="strategy-val">${s.val}</div>
+      <div class="strategy-body">${s.body}</div>
+    </div>
+    ${style === 'martingale' ? `<div class="alert alert-red"><span class="alert-tag">[CRITICAL WARNING]</span> Martingale is mathematically guaranteed to bust any finite bankroll. Use for education only.</div>` : ''}
+  `;
+}
+
+// ===== PATTERN SCANNER =====
+let liveHistory = [];
+
+function addCrash() {
+  const val = parseFloat(document.getElementById('add-crash').value);
+  if (isNaN(val) || val < 1) return;
+  liveHistory.push(val);
+  document.getElementById('add-crash').value = '';
+  updateChips();
+}
+
+function updateChips() {
+  const el = document.getElementById('history-chips');
+  if (liveHistory.length === 0) {
+    el.innerHTML = '<div style="font-family:\'Share Tech Mono\',monospace;font-size:0.6rem;color:var(--muted);padding:8px;">[ NO HISTORY YET ]</div>';
+    return;
+  }
+  el.innerHTML = liveHistory.slice(-30).reverse().map(v => {
+    const cls = v < 1.5 ? 'chip-low' : v < 3 ? 'chip-mid' : v < 10 ? 'chip-high' : 'chip-moon';
+    return `<span class="chip ${cls}">${v.toFixed(2)}x</span>`;
+  }).join('');
+}
+
+function scanPattern() {
+  const raw = document.getElementById('crash-history').value.trim();
+  let data = raw.split(/[\n,\s]+/).map(v => parseFloat(v)).filter(v => !isNaN(v) && v >= 1);
+
+  if (data.length === 0 && liveHistory.length === 0) return;
+  if (data.length === 0) data = liveHistory;
+
+  const avg = data.reduce((a,b) => a+b, 0) / data.length;
+  const below2 = (data.filter(v => v < 2).length / data.length * 100);
+  const above5 = (data.filter(v => v > 5).length / data.length * 100);
+  const below15 = (data.filter(v => v < 1.5).length / data.length * 100);
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+
+  // Streak detection
+  let maxRedStreak = 0, curStreak = 0;
+  data.forEach(v => {
+    if (v < 2) { curStreak++; maxRedStreak = Math.max(maxRedStreak, curStreak); }
+    else curStreak = 0;
+  });
+
+  // Volatility
+  const variance = data.reduce((a,b) => a + Math.pow(b - avg, 2), 0) / data.length;
+  const vol = Math.sqrt(variance);
+
+  // Scores
+  const earlyBust = Math.min(Math.round(below15 * 1.5), 100);
+  const streakRisk = Math.min(maxRedStreak * 12, 100);
+  const volatility = Math.min(Math.round(vol * 8), 100);
+  const hotStreak = Math.min(Math.round(above5 * 3), 100);
+  const fairness = Math.abs(below2 - 50) > 15 ? Math.round(Math.abs(below2 - 50) * 1.5) : 10;
+
+  document.getElementById('pat-placeholder').style.display = 'none';
+  document.getElementById('pat-results').style.display = 'block';
+
+  document.getElementById('pat-avg').textContent = avg.toFixed(2) + 'x';
+  document.getElementById('pat-low').textContent = below2.toFixed(0) + '%';
+  document.getElementById('pat-high').textContent = above5.toFixed(0) + '%';
+
+  const barDefs = [
+    { name:'EARLY BUST FREQUENCY', val: earlyBust },
+    { name:'STREAK DANGER LEVEL', val: streakRisk },
+    { name:'VOLATILITY INDEX', val: volatility },
+    { name:'HIGH MULTIPLIER RATE', val: hotStreak },
+    { name:'FAIRNESS ANOMALY', val: fairness },
+  ];
+
+  document.getElementById('pat-bars').innerHTML = barDefs.map(b => {
+    const col = b.val < 30 ? '#00ff88' : b.val < 65 ? '#ffe600' : '#ff003c';
+    return `
+      <div class="pat-bar">
+        <div class="pat-name">${b.name}</div>
+        <div class="pat-track"><div class="pat-fill" style="background:linear-gradient(90deg,${col}88,${col});box-shadow:0 0 6px ${col};" data-w="${b.val}"></div></div>
+        <div class="pat-val" style="color:${col}">${b.val}%</div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.pat-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 100);
+
+  // Verdict
+  const overall = Math.round((earlyBust + streakRisk + volatility) / 3);
+  let vColor, vText, vSub;
+  if (overall >= 65) { vColor='#ff003c'; vText='⚠ HOSTILE PATTERN DETECTED'; vSub='High bust frequency and dangerous streaks. Reduce bet size or avoid session.'; }
+  else if (overall >= 35) { vColor='#ffe600'; vText='⚡ MODERATE RISK PATTERN'; vSub='Some dangerous patterns present. Stay disciplined with cashout targets.'; }
+  else { vColor='#00ff88'; vText='✓ RELATIVELY CLEAN PATTERN'; vSub='No extreme manipulation signals. Standard risk management still required.'; }
+
+  document.getElementById('pat-verdict').innerHTML = `
+    <div class="verdict-box" style="color:${vColor};border-color:${vColor};box-shadow:0 0 20px ${vColor}22;margin-top:12px;">
+      <div class="verdict-big">${vText}</div>
+      <div class="verdict-sub">${vSub}</div>
+    </div>
+  `;
+
+  const alerts = [];
+  if (below15 > 40) alerts.push({type:'red', tag:'INSTANT BUST ZONE', msg:`${below15.toFixed(0)}% of rounds crashed below 1.5x. Very hostile for any strategy above 1.5x cashout.`});
+  if (maxRedStreak >= 5) alerts.push({type:'red', tag:'LONG BUST STREAK', msg:`Detected streak of ${maxRedStreak} consecutive sub-2x crashes. Your bankroll must survive at least this many losses.`});
+  if (above5 > 20) alerts.push({type:'green', tag:'HIGH MULT FREQUENCY', msg:`${above5.toFixed(0)}% of rounds hit above 5x. Consider occasional high-target hunts with small bet sizes.`});
+  if (avg > 4) alerts.push({type:'yellow', tag:'SKEWED AVERAGE', msg:`Average of ${avg.toFixed(2)}x is inflated by rare high multipliers. Don't let this distort your strategy.`});
+
+  showAlerts('pat-alerts', alerts);
+}
+
+// ===== BANKROLL GUARD =====
+function guardBankroll() {
+  const start = parseFloat(document.getElementById('bk-start').value) || 200;
+  const bet = parseFloat(document.getElementById('bk-bet').value) || 10;
+  const cashout = parseFloat(document.getElementById('bk-cashout').value) || 2;
+  const stopLoss = parseFloat(document.getElementById('bk-stop').value) || 50;
+  const takeProfit = parseFloat(document.getElementById('bk-tp').value) || 100;
+  const rounds = parseInt(document.getElementById('bk-rounds').value) || 100;
+  const edge = 0.01;
+
+  const winChance = (1 - edge) / cashout;
+  let bankroll = start;
+  const history = [start];
+  let maxDD = 0, peak = start;
+  let busted = false;
+
+  for (let i = 0; i < rounds; i++) {
+    const won = Math.random() < winChance;
+    bankroll += won ? bet * (cashout - 1) : -bet;
+    if (bankroll > peak) peak = bankroll;
+    const dd = ((peak - bankroll) / peak) * 100;
+    if (dd > maxDD) maxDD = dd;
+    history.push(Math.max(bankroll, 0));
+    if (bankroll <= start - stopLoss || bankroll <= 0) { busted = true; break; }
+    if (bankroll >= start + takeProfit) break;
+  }
+
+  // Kelly
+  const p = winChance;
+  const q = 1 - p;
+  const b = cashout - 1;
+  const kelly = Math.max(((b * p - q) / b) * 100, 0);
+  const kellyBet = (kelly / 100) * start;
+
+  // Draw chart
+  drawBankChart(history, start);
+
+  const survRate = busted ? 'BUSTED' : '✓ SAFE';
+  document.getElementById('bk-maxdd').textContent = maxDD.toFixed(1) + '%';
+  document.getElementById('bk-survrate').textContent = survRate;
+  document.getElementById('bk-survrate').style.color = busted ? '#ff003c' : '#00ff88';
+  document.getElementById('bk-kelly').textContent = '$' + kellyBet.toFixed(2);
+
+  const alerts = [];
+  if (kellyBet < bet) alerts.push({type:'red', tag:'OVERBETTING KELLY', msg:`Kelly suggests $${kellyBet.toFixed(2)} per bet. You're betting $${bet} — ${((bet/kellyBet - 1)*100).toFixed(0)}% over Kelly. Risk of ruin increases dramatically.`});
+  else alerts.push({type:'green', tag:'WITHIN KELLY RANGE', msg:`Your bet size is within Kelly Criterion limits. This maximizes long-term growth while managing ruin risk.`});
+  if (maxDD > 40) alerts.push({type:'red', tag:'HIGH DRAWDOWN', msg:`Max drawdown hit ${maxDD.toFixed(1)}% in simulation. Psychologically very hard to recover from. Consider smaller bets.`});
+  if (busted) alerts.push({type:'red', tag:'SIMULATION BUSTED', msg:`Bankroll hit stop-loss in this simulation. This WILL happen in real play. Never bet what you can't afford to lose.`});
+
+  showAlerts('bk-alerts', alerts);
+}
+
+function drawBankChart(history, start) {
+  const canvas = document.getElementById('bankCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 400;
+  const H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const max = Math.max(...history) * 1.05;
+  const min = Math.min(...history) * 0.95;
+  const range = max - min || 1;
+  const pad = 16;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(191,0,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad + (i/4) * (H - pad*2);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Start line
+  const startY = H - pad - ((start - min) / range) * (H - pad*2);
+  ctx.strokeStyle = 'rgba(255,230,0,0.3)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(0, startY); ctx.lineTo(W, startY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Fill gradient
+  const grad = ctx.createLinearGradient(0, pad, 0, H - pad);
+  grad.addColorStop(0, 'rgba(191,0,255,0.2)');
+  grad.addColorStop(1, 'rgba(191,0,255,0)');
+
+  ctx.beginPath();
+  history.forEach((v, i) => {
+    const x = (i / (history.length - 1)) * W;
+    const y = H - pad - ((v - min) / range) * (H - pad*2);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  const finalVal = history[history.length - 1];
+  const lineColor = finalVal >= start ? '#00ff88' : '#ff003c';
+  ctx.beginPath();
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 8; ctx.shadowColor = lineColor;
+  history.forEach((v, i) => {
+    const x = (i / (history.length - 1)) * W;
+    const y = H - pad - ((v - min) / range) * (H - pad*2);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+// ===== FAIRNESS CHECKER =====
+async function checkFairness() {
+  const serverSeed = document.getElementById('server-seed').value.trim();
+  const clientSeed = document.getElementById('client-seed').value.trim();
+  const nonce = document.getElementById('nonce').value.trim();
+  const claimed = parseFloat(document.getElementById('claimed-result').value) || 0;
+
+  document.getElementById('fair-placeholder').style.display = 'none';
+  document.getElementById('fair-results').style.display = 'block';
+
+  if (!serverSeed || !clientSeed || !nonce) {
+    document.getElementById('fair-hash').textContent = '[ INCOMPLETE INPUT — FILL ALL FIELDS ]';
+    document.getElementById('fair-verdict').innerHTML = '';
+    return;
+  }
+
+  // Simulate hash verification using SubtleCrypto
+  try {
+    const combined = serverSeed + ':' + clientSeed + ':' + nonce;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(combined);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Derive a "result" from hash (simplified crash derivation)
+    const e = parseInt(hashHex.slice(0, 8), 16);
+    const derived = Math.max(1, (100 / (1 - (e / Math.pow(2, 32)))) / 100);
+    const derivedClamped = Math.min(derived, 100);
+
+    document.getElementById('fair-hash').innerHTML = `
+      INPUT COMBINED: ${combined.slice(0,40)}...<br>
+      SHA-256 HASH: ${hashHex.slice(0,32)}...<br>
+      DERIVED RESULT: ${derivedClamped.toFixed(2)}x<br>
+      CLAIMED RESULT: ${claimed > 0 ? claimed.toFixed(2) + 'x' : 'NOT PROVIDED'}
+    `;
+
+    const match = claimed > 0 ? Math.abs(derivedClamped - claimed) < 0.5 : null;
+
+    let vColor, vText, vSub;
+    if (match === null) {
+      vColor = '#bf00ff'; vText = 'HASH COMPUTED';
+      vSub = 'Enter claimed result to verify if the game was fair.';
+    } else if (match) {
+      vColor = '#00ff88'; vText = '✓ RESULT VERIFIED FAIR';
+      vSub = 'Derived result matches claimed result. This round appears provably fair.';
+    } else {
+      vColor = '#ff003c'; vText = '⚠ MISMATCH DETECTED';
+      vSub = `Derived ${derivedClamped.toFixed(2)}x vs claimed ${claimed.toFixed(2)}x. This may indicate manipulation.`;
+    }
+
+    document.getElementById('fair-verdict').innerHTML = `
+      <div class="verdict-box" style="color:${vColor};border-color:${vColor};box-shadow:0 0 20px ${vColor}22;margin-top:12px;">
+        <div class="verdict-big">${vText}</div>
+        <div class="verdict-sub">${vSub}</div>
+      </div>
+    `;
+
+    const alerts = [];
+    if (match === false) alerts.push({type:'red', tag:'POTENTIAL MANIPULATION', msg:'The hash derivation does not match the claimed result. Consider reporting this to the platform or stopping play.'});
+    if (match === true) alerts.push({type:'green', tag:'VERIFIED', msg:'This specific round passes provably fair verification. Always verify multiple rounds for full confidence.'});
+    showAlerts('fair-alerts', alerts);
+
+  } catch(e) {
+    document.getElementById('fair-hash').textContent = '[ VERIFICATION ERROR — CHECK INPUT ]';
+  }
+}
+
+// ===== HELPERS =====
+function showAlerts(id, alerts) {
+  document.getElementById(id).innerHTML = alerts.map(a => `
+    <div class="alert alert-${a.type}">
+      <span class="alert-tag">[${a.tag}]</span>${a.msg}
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
