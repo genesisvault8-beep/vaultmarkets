@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var ok=localStorage.getItem("vm_access")==="true";if(!ok){var d=encodeURIComponent(window.location.pathname.split("/").pop());window.location.replace("vaultmarkets-access.html?redirect="+d);}})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultMarkets — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --panel: #080f1c;
+  --border: rgba(0,229,255,0.1);
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff3355;
+  --gold: #ffd700;
+  --yellow: #ffe600;
+  --purple: #bf00ff;
+  --orange: #ff8800;
+  --text: #b0c8d8;
+  --dim: #1a2a3a;
+  --muted: #3a5060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── TICKER ── */
+.ticker {
+  background: rgba(0,229,255,0.04);
+  border-bottom: 1px solid var(--border);
+  height: 28px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+.ticker-track {
+  display: flex;
+  animation: tickscroll 30s linear infinite;
+  white-space: nowrap;
+}
+@keyframes tickscroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.tick-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-right: 1px solid var(--border);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.tick-sport { color: var(--muted); }
+.tick-odds { color: var(--cyan); font-weight: bold; }
+.tick-badge { color: var(--green); font-size: 9px; }
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(4,8,15,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.nav-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--cyan); }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.nav-code {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+.nav-code span { color: var(--cyan); }
+.nav-logout {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.nav-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* ── WRAP ── */
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── WELCOME BANNER ── */
+.welcome-banner {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.welcome-banner::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--cyan), var(--purple), transparent);
+  opacity: 0.5;
+}
+.welcome-left {}
+.welcome-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.welcome-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.welcome-title span { color: var(--cyan); }
+.welcome-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.welcome-stats {
+  display: flex;
+  gap: 24px;
+}
+.w-stat { text-align: center; }
+.w-stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.w-stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content:'';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── TOOLS GRID ── */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.tool-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 18px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.tool-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tool-card:hover {
+  border-color: rgba(0,229,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.tool-card:hover::before { opacity: 0.6; }
+
+.tool-card.featured {
+  border-color: rgba(0,229,255,0.2);
+  background: linear-gradient(135deg, var(--panel) 0%, rgba(0,229,255,0.03) 100%);
+}
+.tool-card.featured::before { opacity: 0.4; }
+
+.tool-featured-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.15);
+  padding: 2px 8px;
+  display: inline-block;
+  width: fit-content;
+}
+.tool-icon { font-size: 28px; }
+.tool-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.tool-desc {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.7;
+  line-height: 1.5;
+  flex: 1;
+}
+.tool-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tool-tag-arrow { color: var(--cyan); }
+
+/* ── LIVE ODDS SECTION ── */
+.odds-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 20px;
+  margin-bottom: 24px;
+}
+.odds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.odds-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+}
+.odds-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.odds-table { width: 100%; border-collapse: collapse; }
+.odds-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.odds-row:last-child { border-bottom: none; }
+.odds-row:hover { background: rgba(0,229,255,0.02); }
+.odds-row td {
+  padding: 12px 8px;
+  font-size: 13px;
+}
+.odds-league {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.odds-match {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+.odds-time {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.odds-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  text-align: right;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.odds-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  text-align: center;
+}
+.badge-hot { background: rgba(255,51,85,0.1); color: var(--red); border: 1px solid rgba(255,51,85,0.2); }
+.badge-value { background: rgba(0,255,136,0.08); color: var(--green); border: 1px solid rgba(0,255,136,0.15); }
+.badge-warm { background: rgba(255,230,0,0.07); color: var(--yellow); border: 1px solid rgba(255,230,0,0.15); }
+
+/* ── QUICK STATS ── */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+@media(max-width:600px){ .quick-stats { grid-template-columns: repeat(2,1fr); } }
+.qs-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.qs-card::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.3;
+}
+.qs-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--cyan);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.qs-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* ── AVIATOR CTA ── */
+.aviator-cta {
+  background: linear-gradient(135deg, var(--panel) 0%, rgba(191,0,255,0.05) 100%);
+  border: 1px solid rgba(191,0,255,0.2);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.aviator-cta::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--purple), var(--cyan), transparent);
+}
+.av-cta-left {}
+.av-cta-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--purple);
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+.av-cta-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.av-cta-title span { color: var(--cyan); }
+.av-cta-sub {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 6px;
+}
+.av-cta-btn {
+  padding: 14px 28px;
+  background: var(--cyan);
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.av-cta-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(0,229,255,0.3); }
+
+/* ── FOOTER ── */
+.dash-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.footer-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+.footer-logo span { color: var(--cyan); opacity: 0.5; }
+.footer-copy {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+@media(max-width:600px){
+  .tools-grid { grid-template-columns: 1fr 1fr; }
+  .welcome-stats { display: none; }
+  .odds-time, .odds-league { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">VAULT<span>MARKETS</span></a>
+  <div class="nav-right">
+    <div class="nav-code">// CODE: <span id="navCode">—</span></div>
+    <button class="nav-logout" onclick="logout()">LOGOUT</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- WELCOME BANNER -->
+  <div class="welcome-banner">
+    <div class="welcome-left">
+      <div class="welcome-tag">// INTELLIGENCE PLATFORM</div>
+      <div class="welcome-title">WELCOME TO <span>VAULTMARKETS</span></div>
+      <div class="welcome-sub" id="welcomeSub">// LOADING SESSION...</div>
+    </div>
+    <div class="welcome-stats">
+      <div class="w-stat">
+        <div class="w-stat-val">8</div>
+        <div class="w-stat-label">TOOLS</div>
+      </div>
+      <div class="w-stat">
+        <div class="w-stat-val" id="liveOddsCount">12</div>
+        <div class="w-stat-label">LIVE ODDS</div>
+      </div>
+      <div class="w-stat">
+        <div class="w-stat-val">24/7</div>
+        <div class="w-stat-label">ACTIVE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK STATS -->
+  <div class="quick-stats">
+    <div class="qs-card">
+      <div class="qs-val">✈️</div>
+      <div class="qs-label">AVIATOR LIVE</div>
+    </div>
+    <div class="qs-card">
+      <div class="qs-val" id="qsMatches">8</div>
+      <div class="qs-label">MATCHES TODAY</div>
+    </div>
+    <div class="qs-card">
+      <div class="qs-val green" style="color:var(--green)" id="qsValue">3</div>
+      <div class="qs-label">VALUE BETS</div>
+    </div>
+    <div class="qs-card">
+      <div class="qs-val" id="qsTime">—</div>
+      <div class="qs-label">LOCAL TIME</div>
+    </div>
+  </div>
+
+  <!-- AVIATOR CTA -->
+  <div class="aviator-cta">
+    <div class="av-cta-left">
+      <div class="av-cta-tag">// MAIN ATTRACTION — CRASH INTELLIGENCE</div>
+      <div class="av-cta-title">AVIATOR <span>SIGNAL</span></div>
+      <div class="av-cta-sub">Enter your last 5 rounds — get your target multiplier instantly</div>
+    </div>
+    <a href="vaultmarkets-aviator.html" class="av-cta-btn">LAUNCH SIGNAL →</a>
+  </div>
+
+  <!-- LIVE ODDS -->
+  <div class="section-label">// LIVE ODDS FEED</div>
+  <div class="odds-section">
+    <div class="odds-header">
+      <div class="odds-title">// TODAY'S MARKETS</div>
+      <div class="odds-status">
+        <div class="live-dot"></div>
+        SIMULATED DATA
+      </div>
+    </div>
+    <table class="odds-table" id="oddsTable"></table>
+  </div>
+
+  <!-- TOOLS GRID -->
+  <div class="section-label">// INTELLIGENCE TOOLS</div>
+  <div class="tools-grid">
+    <a class="tool-card featured" href="vaultmarkets-aviator.html">
+      <div class="tool-featured-tag">// MAIN ATTRACTION</div>
+      <div class="tool-icon">✈️</div>
+      <div class="tool-name">AVIATOR SIGNAL</div>
+      <div class="tool-desc">Pattern analysis engine. Enter your last 5 rounds and get your target multiplier with confidence score.</div>
+      <div class="tool-tag">CRASH INTEL <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="cipher-score.html">
+      <div class="tool-icon">⚽</div>
+      <div class="tool-name">CIPHER SCORE</div>
+      <div class="tool-desc">Football match intelligence. Form analysis, patterns and outcome prediction before kickoff.</div>
+      <div class="tool-tag">FOOTBALL <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="cipher-hoops.html">
+      <div class="tool-icon">🏀</div>
+      <div class="tool-name">CIPHER HOOPS</div>
+      <div class="tool-desc">Basketball intelligence terminal. Team momentum and edge finder the bookmakers miss.</div>
+      <div class="tool-tag">BASKETBALL <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="cipher-tennis.html">
+      <div class="tool-icon">🎾</div>
+      <div class="tool-name">CIPHER TENNIS</div>
+      <div class="tool-desc">Surface analysis, serve patterns and head-to-head intelligence for every court.</div>
+      <div class="tool-tag">TENNIS <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="cipher-crash.html">
+      <div class="tool-icon">🚀</div>
+      <div class="tool-name">CIPHER CRASH</div>
+      <div class="tool-desc">Crash game survival terminal. Pattern detection and exit signals before the bust.</div>
+      <div class="tool-tag">CRASH <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="betsmart.html">
+      <div class="tool-icon">📊</div>
+      <div class="tool-name">BETSMART</div>
+      <div class="tool-desc">Professional bankroll tracker. Track every stake, session and return like a trader.</div>
+      <div class="tool-tag">BANKROLL <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="bettruth.html">
+      <div class="tool-icon">🧮</div>
+      <div class="tool-name">BETTRUTH</div>
+      <div class="tool-desc">The real math behind every bet. EV calculator, implied probability and margin revealer.</div>
+      <div class="tool-tag">MATH <span class="tool-tag-arrow">→</span></div>
+    </a>
+    <a class="tool-card" href="cipher-daily.html">
+      <div class="tool-icon">📅</div>
+      <div class="tool-name">CIPHER DAILY</div>
+      <div class="tool-desc">Daily pick intelligence. Curated value bets across all major markets every day.</div>
+      <div class="tool-tag">DAILY PICKS <span class="tool-tag-arrow">→</span></div>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="dash-footer">
+    <div class="footer-logo">VAULT<span>MARKETS</span></div>
+    <div class="footer-copy">// GENESIS GROUP © 2026 — FOR EDUCATIONAL PURPOSES — BET RESPONSIBLY</div>
+  </div>
+
+</div>
+
+<script>
+// ── SESSION ──
+window.addEventListener('DOMContentLoaded', () => {
+  const code = localStorage.getItem('vm_code') || '—';
+  document.getElementById('navCode').textContent = code;
+
+  const accessTime = localStorage.getItem('vm_access_time');
+  if (accessTime) {
+    const d = new Date(parseInt(accessTime));
+    document.getElementById('welcomeSub').textContent =
+      '// SESSION ACTIVE — SINCE ' + d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+  } else {
+    document.getElementById('welcomeSub').textContent = '// SESSION ACTIVE';
+  }
+
+  updateTime();
+  setInterval(updateTime, 30000);
+  buildTicker();
+  buildOdds();
+  setInterval(fluctuateOdds, 3000);
+});
+
+function updateTime() {
+  const now = new Date();
+  document.getElementById('qsTime').textContent =
+    now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+
+function logout() {
+  if (!confirm('End your VaultMarkets session?')) return;
+  localStorage.removeItem('vm_access');
+  localStorage.removeItem('vm_code');
+  localStorage.removeItem('vm_access_time');
+  window.location.href = 'vaultmarkets-access.html';
+}
+
+// ── TICKER ──
+const tickerData = [
+  {sport:'⚽ EPL', match:'Arsenal vs Chelsea', odds:'2.10', badge:'🔥 HOT'},
+  {sport:'🏀 NBA', match:'Lakers vs Celtics', odds:'1.85', badge:'⚡ VALUE'},
+  {sport:'⚽ UCL', match:'Real Madrid vs Bayern', odds:'2.40', badge:'🔥 HOT'},
+  {sport:'🎾 ATP', match:'Djokovic vs Alcaraz', odds:'1.90', badge:'⚡ VALUE'},
+  {sport:'⚽ LALIGA', match:'Barca vs Atletico', odds:'1.95', badge:'⚡ VALUE'},
+  {sport:'🏀 NBA', match:'Warriors vs Nets', odds:'1.60', badge:'— FAIR'},
+  {sport:'⚽ SERIE A', match:'Juventus vs AC Milan', odds:'2.50', badge:'🔥 HOT'},
+  {sport:'🎾 WTA', match:'Swiatek vs Gauff', odds:'1.70', badge:'🔥 HOT'},
+  {sport:'⚽ LALIGA', match:'Real Madrid vs Sevilla', odds:'1.55', badge:'— FAIR'},
+  {sport:'🏀 NBA', match:'Bucks vs Heat', odds:'2.05', badge:'⚡ VALUE'},
+];
+
+function buildTicker() {
+  const items = tickerData.map(d =>
+    `<div class="tick-item">
+      <span class="tick-sport">${d.sport}</span>
+      <span style="color:#fff;font-size:11px">${d.match}</span>
+      <span class="tick-odds">${d.odds}</span>
+      <span class="tick-badge">${d.badge}</span>
+    </div>`
+  );
+  document.getElementById('tickerTrack').innerHTML = [...items,...items].join('');
+}
+
+// ── ODDS TABLE ──
+const oddsData = [
+  {league:'EPL', match:'Arsenal vs Chelsea', time:'20:00', odds:2.10, badge:'badge-hot', label:'🔥 HOT'},
+  {league:'UCL', match:'Real Madrid vs Bayern', time:'21:00', odds:2.40, badge:'badge-hot', label:'🔥 HOT'},
+  {league:'LALIGA', match:'Barcelona vs Atletico', time:'19:00', odds:1.95, badge:'badge-value', label:'⚡ VALUE'},
+  {league:'NBA', match:'Lakers vs Celtics', time:'01:30', odds:1.85, badge:'badge-value', label:'⚡ VALUE'},
+  {league:'ATP', match:'Djokovic vs Alcaraz', time:'14:00', odds:1.90, badge:'badge-value', label:'⚡ VALUE'},
+  {league:'SERIE A', match:'Juventus vs AC Milan', time:'19:45', odds:2.50, badge:'badge-warm', label:'— WARM'},
+  {league:'NBA', match:'Warriors vs Bucks', time:'00:00', odds:1.65, badge:'badge-warm', label:'— WARM'},
+  {league:'EPL', match:'Man City vs Liverpool', time:'17:30', odds:2.20, badge:'badge-hot', label:'🔥 HOT'},
+];
+
+function buildOdds() {
+  document.getElementById('oddsTable').innerHTML = oddsData.map((o, i) => `
+    <tr class="odds-row">
+      <td><div class="odds-league">${o.league}</div></td>
+      <td><div class="odds-match">${o.match}</div></td>
+      <td><div class="odds-time">${o.time}</div></td>
+      <td><div class="odds-val" id="odd${i}" data-base="${o.odds}">${o.odds.toFixed(2)}</div></td>
+      <td><div class="odds-badge ${o.badge}">${o.label}</div></td>
+    </tr>
+  `).join('');
+}
+
+function fluctuateOdds() {
+  oddsData.forEach((o, i) => {
+    if (Math.random() < 0.25) {
+      const el = document.getElementById('odd' + i);
+      if (!el) return;
+      const change = (Math.random() - 0.5) * 0.06;
+      const newVal = Math.max(1.01, +(o.odds + change).toFixed(2));
+      el.textContent = newVal.toFixed(2);
+      el.style.color = newVal > o.odds ? 'var(--green)' : 'var(--red)';
+      setTimeout(() => el.style.color = '#fff', 800);
+    }
+  });
+}
+</script>
+</body>
+</html>
