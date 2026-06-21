@@ -476,6 +476,35 @@ nav {
 }
 .av-cta-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(0,229,255,0.3); }
 
+/* ── REFERRAL BANNER ── */
+.referral-banner {
+  background: linear-gradient(135deg, var(--panel) 0%, rgba(0,255,136,0.04) 100%);
+  border: 1px solid rgba(0,255,136,0.15);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.referral-banner::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--green), transparent);
+  opacity: 0.5;
+}
+.ref-banner-left { display:flex; align-items:center; gap:14px; }
+.ref-banner-icon { font-size: 28px; flex-shrink: 0; }
+.ref-banner-tag { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--green); letter-spacing: 3px; margin-bottom: 3px; }
+.ref-banner-title { font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+.ref-banner-sub { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 3px; }
+.ref-banner-btn { padding: 12px 22px; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); color: var(--green); font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-decoration: none; border-radius: 3px; transition: all 0.3s; white-space: nowrap; }
+.ref-banner-btn:hover { background: var(--green); color: #000; }
+
 /* ── FOOTER ── */
 .dash-footer {
   display: flex;
@@ -577,6 +606,19 @@ nav {
       <div class="av-cta-sub">Enter your last 5 rounds — get your target multiplier instantly</div>
     </div>
     <a href="vaultmarkets-aviator.html" class="av-cta-btn">LAUNCH SIGNAL →</a>
+  </div>
+
+  <!-- REFERRAL BANNER -->
+  <div class="referral-banner">
+    <div class="ref-banner-left">
+      <div class="ref-banner-icon">🎁</div>
+      <div>
+        <div class="ref-banner-tag">// EARN FREE ACCESS</div>
+        <div class="ref-banner-title">REFER &amp; EARN</div>
+        <div class="ref-banner-sub">Refer 1 friend → 7 days free | Refer 3 → 1 month free | Refer 5 → 3 months free</div>
+      </div>
+    </div>
+    <a href="vaultmarkets-referral.html" class="ref-banner-btn">GET MY LINK →</a>
   </div>
 
   <!-- LIVE ODDS -->

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var ok=localStorage.getItem("vm_access")==="true";if(!ok){window.location.replace("vaultmarkets-access.html?redirect=vaultmarkets-referral.html");}})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultMarkets — Referral</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --panel: #080f1c;
+  --border: rgba(0,229,255,0.1);
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff3355;
+  --gold: #ffd700;
+  --yellow: #ffe600;
+  --purple: #bf00ff;
+  --orange: #ff8800;
+  --text: #b0c8d8;
+  --dim: #1a2a3a;
+  --muted: #3a5060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(4,8,15,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.nav-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--cyan); }
+.nav-tool {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.15);
+  padding: 4px 12px;
+}
+.nav-back {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: color 0.2s;
+}
+.nav-back:hover { color: var(--cyan); }
+
+/* ── WRAP ── */
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.page-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+.page-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(26px, 6vw, 42px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+.page-title span { color: var(--green); text-shadow: 0 0 30px rgba(0,255,136,0.3); }
+.page-desc {
+  font-size: 15px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 10px;
+}
+
+/* ── REWARD TIERS ── */
+.rewards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.reward-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 12px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.reward-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  opacity: 0.3;
+}
+.reward-card.active {
+  border-color: rgba(0,255,136,0.3);
+}
+.reward-card.active::before { opacity: 0.7; }
+.reward-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.reward-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.reward-prize {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #fff;
+  letter-spacing: 1px;
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.12);
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+.reward-prize.gold { color: var(--gold); background: rgba(255,215,0,0.06); border-color: rgba(255,215,0,0.15); }
+.reward-prize.purple { color: var(--purple); background: rgba(191,0,255,0.06); border-color: rgba(191,0,255,0.15); }
+
+/* ── REFERRAL LINK CARD ── */
+.ref-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.ref-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--green), var(--cyan), transparent);
+  opacity: 0.4;
+}
+.section-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+
+.ref-code-display {
+  background: var(--bg2);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 3px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.ref-code-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 3px;
+}
+.btn-copy {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.2);
+  color: var(--green);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-copy:hover { background: rgba(0,255,136,0.15); }
+.btn-copy.copied { color: var(--cyan); border-color: rgba(0,229,255,0.3); }
+
+.ref-link-display {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ref-link-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  word-break: break-all;
+  flex: 1;
+}
+
+.share-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn-share {
+  flex: 1;
+  padding: 14px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.3s;
+  text-decoration: none;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 130px;
+}
+.btn-wa {
+  background: #25D366;
+  color: #000;
+}
+.btn-wa:hover { background: #20b957; box-shadow: 0 0 16px rgba(37,211,102,0.3); }
+.btn-copy-link {
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+}
+.btn-copy-link:hover { background: var(--cyan); color: #000; }
+
+/* ── STATS CARD ── */
+.stats-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.stats-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--purple), transparent);
+  opacity: 0.4;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 16px 10px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--cyan);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-val.green { color: var(--green); }
+.stat-val.gold { color: var(--gold); }
+.stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-section {
+  margin-top: 20px;
+}
+.progress-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+.progress-bar {
+  height: 6px;
+  background: var(--dim);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.progress-next {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 1px;
+}
+
+/* ── HOW IT WORKS ── */
+.how-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.step:last-child { margin-bottom: 0; }
+.step-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 2px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  padding-top: 3px;
+}
+.step-text strong { color: #fff; }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  background: rgba(255,136,0,0.04);
+  border: 1px solid rgba(255,136,0,0.12);
+  border-radius: 3px;
+  padding: 14px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.disclaimer-icon { font-size: 14px; flex-shrink: 0; }
+.disclaimer-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,136,0,0.7);
+  letter-spacing: 1px;
+  line-height: 1.7;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--green);
+  color: #000;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  border-radius: 3px;
+  transition: transform 0.3s ease;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media(max-width:500px){
+  .rewards-grid { grid-template-columns: repeat(3,1fr); gap:8px; }
+  .reward-num { font-size: 24px; }
+  .stats-grid { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">VAULT<span>MARKETS</span></a>
+  <div class="nav-tool">🎁 REFERRAL</div>
+  <a href="vaultmarkets-main.html" class="nav-back">← DASHBOARD</a>
+</nav>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-tag">// EARN FREE ACCESS</div>
+    <div class="page-title">REFER & <span>EARN</span></div>
+    <div class="page-desc">Share your link. Friends join. You get free days.</div>
+  </div>
+
+  <!-- REWARD TIERS -->
+  <div class="rewards-grid">
+    <div class="reward-card" id="tier1">
+      <div class="reward-num">1</div>
+      <div class="reward-label">REFERRAL</div>
+      <div class="reward-prize">7 DAYS FREE</div>
+    </div>
+    <div class="reward-card" id="tier2">
+      <div class="reward-num">3</div>
+      <div class="reward-label">REFERRALS</div>
+      <div class="reward-prize gold">1 MONTH FREE</div>
+    </div>
+    <div class="reward-card" id="tier3">
+      <div class="reward-num">5</div>
+      <div class="reward-label">REFERRALS</div>
+      <div class="reward-prize purple">3 MONTHS FREE</div>
+    </div>
+  </div>
+
+  <!-- REFERRAL LINK CARD -->
+  <div class="ref-card">
+    <div class="section-title">// YOUR REFERRAL CODE & LINK</div>
+
+    <div class="ref-code-display">
+      <div class="ref-code-val" id="refCodeDisplay">—</div>
+      <button class="btn-copy" id="copyCodeBtn" onclick="copyCode()">COPY CODE</button>
+    </div>
+
+    <div class="ref-link-display">
+      <div class="ref-link-val" id="refLinkDisplay">—</div>
+      <button class="btn-copy" id="copyLinkBtn" onclick="copyLink()">COPY</button>
+    </div>
+
+    <div class="share-row">
+      <a class="btn-share btn-wa" id="waShareBtn" href="#" target="_blank">
+        <span>📲</span> SHARE ON WHATSAPP
+      </a>
+      <button class="btn-share btn-copy-link" onclick="copyLink()">
+        🔗 COPY LINK
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-card">
+    <div class="section-title">// YOUR REFERRAL STATS</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val green" id="statTotal">0</div>
+        <div class="stat-label">TOTAL REFS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val gold" id="statDaysEarned">0</div>
+        <div class="stat-label">DAYS EARNED</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statNextReward">1</div>
+        <div class="stat-label">NEXT REWARD</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>// PROGRESS TO NEXT REWARD</span>
+        <span id="progressText">0 / 1</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-next" id="progressNext">// REFER 1 FRIEND → EARN 7 DAYS FREE</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-card">
+    <div class="section-title" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan);letter-spacing:3px;margin-bottom:16px;">// HOW IT WORKS</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Copy your <strong>referral link</strong> or code above and share it with friends</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Your friend visits the link and pays for access. They <strong>mention your code</strong> on WhatsApp when sending their screenshot</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">We verify the payment and <strong>add free days</strong> to your subscription automatically</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Hit <strong>3 referrals</strong> and get a full month free. Hit <strong>5</strong> and get 3 months free 🔥</div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">⚠️</div>
+    <div class="disclaimer-text">
+      REFERRAL REWARDS ARE MANUALLY VERIFIED AND APPLIED WITHIN 24 HOURS.
+      SELF-REFERRALS ARE NOT ELIGIBLE. CODES ARE PERSONAL AND NON-TRANSFERABLE.
+      VAULTMARKETS RESERVES THE RIGHT TO VOID FRAUDULENT REFERRALS.
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ COPIED!</div>
+
+<script>
+const BASE_URL = 'https://bet.genesisvault.xyz/vaultmarkets-access.html';
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  const code = localStorage.getItem('vm_code') || '';
+  if (!code) return;
+
+  // Generate referral code from access code
+  const refCode = 'REF-' + code.replace('VM-', '').substring(0, 6);
+  const refLink = BASE_URL + '?ref=' + refCode;
+
+  document.getElementById('refCodeDisplay').textContent = refCode;
+  document.getElementById('refLinkDisplay').textContent = refLink;
+
+  // WhatsApp share message
+  const waMsg = encodeURIComponent(
+    `🔥 *VaultMarkets — Betting Intelligence Platform*\n\n` +
+    `Get AI-powered signals for Aviator, Football, Basketball, Tennis & more!\n\n` +
+    `Use my referral link to get access:\n${refLink}\n\n` +
+    `Or mention my code *${refCode}* when you pay.\n\n` +
+    `Plans from ₦5,000 — smarter than losing on a guess 💡`
+  );
+  document.getElementById('waShareBtn').href = `https://wa.me/?text=${waMsg}`;
+
+  // Load stats
+  loadStats(refCode);
+
+  // Check if referred by someone (store ref in localStorage)
+  const params = new URLSearchParams(window.location.search);
+  const incomingRef = params.get('ref');
+  if (incomingRef) localStorage.setItem('vm_referred_by', incomingRef);
+});
+
+// ── STATS ──
+function loadStats(refCode) {
+  const key = 'vm_ref_stats_' + refCode;
+  let stats = JSON.parse(localStorage.getItem(key) || '{"total":0,"days":0}');
+
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statDaysEarned').textContent = stats.days;
+
+  // Progress to next reward
+  const milestones = [1, 3, 5];
+  const rewards = ['7 DAYS', '1 MONTH', '3 MONTHS'];
+  let nextMilestone = milestones.find(m => m > stats.total) || 5;
+  let nextIdx = milestones.indexOf(nextMilestone);
+  let prevMilestone = nextIdx > 0 ? milestones[nextIdx - 1] : 0;
+  let progress = ((stats.total - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
+
+  document.getElementById('statNextReward').textContent = nextMilestone - stats.total + ' MORE';
+  document.getElementById('progressText').textContent = stats.total + ' / ' + nextMilestone;
+  document.getElementById('progressFill').style.width = Math.min(100, progress) + '%';
+
+  if (nextIdx >= 0) {
+    document.getElementById('progressNext').textContent =
+      `// REFER ${nextMilestone - stats.total} MORE → EARN ${rewards[nextIdx]} FREE`;
+  }
+
+  // Highlight active tiers
+  if (stats.total >= 1) document.getElementById('tier1').classList.add('active');
+  if (stats.total >= 3) document.getElementById('tier2').classList.add('active');
+  if (stats.total >= 5) document.getElementById('tier3').classList.add('active');
+}
+
+// ── COPY ──
+function copyCode() {
+  const code = document.getElementById('refCodeDisplay').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('CODE COPIED!'));
+  const btn = document.getElementById('copyCodeBtn');
+  btn.textContent = '✓ COPIED';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY CODE'; btn.classList.remove('copied'); }, 2000);
+}
+
+function copyLink() {
+  const link = document.getElementById('refLinkDisplay').textContent;
+  navigator.clipboard.writeText(link).then(() => showToast('LINK COPIED!'));
+  const btn = document.getElementById('copyLinkBtn');
+  btn.textContent = '✓ COPIED';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
