@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var ok=localStorage.getItem("vm_access")==="true";if(!ok){var d=encodeURIComponent(window.location.pathname.split("/").pop());window.location.replace("vaultmarkets-access.html?redirect="+d);}})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultMarkets — Aviator Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --panel: #080f1c;
+  --border: rgba(0,229,255,0.1);
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff3355;
+  --gold: #ffd700;
+  --yellow: #ffe600;
+  --purple: #bf00ff;
+  --orange: #ff8800;
+  --text: #b0c8d8;
+  --dim: #1a2a3a;
+  --muted: #3a5060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events:none; z-index:0;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(4,8,15,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.nav-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--cyan); }
+.nav-tool {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  background: rgba(0,229,255,0.06);
+  border: 1px solid rgba(0,229,255,0.15);
+  padding: 4px 12px;
+}
+.nav-back {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: color 0.2s;
+}
+.nav-back:hover { color: var(--cyan); }
+
+/* ── MAIN WRAP ── */
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.page-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+.page-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(28px, 6vw, 48px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+.page-title span { color: var(--cyan); text-shadow: 0 0 30px rgba(0,229,255,0.4); }
+.page-desc {
+  font-size: 15px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* ── LIVE MULTIPLIER DISPLAY ── */
+.live-display {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.live-display::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+.live-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+.live-mult {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(56px, 14vw, 96px);
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(0,255,136,0.3);
+  transition: color 0.3s;
+  letter-spacing: 2px;
+}
+.live-mult-x {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 4px;
+  margin-top: 6px;
+}
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 6px 16px;
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.15);
+  border-radius: 2px;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.live-status-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+
+/* ── INPUT SECTION ── */
+.input-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  position: relative;
+}
+.input-section::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--purple), transparent);
+  opacity: 0.5;
+}
+.section-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rounds-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.round-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.round-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+.round-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cyan);
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+.round-input::-webkit-outer-spin-button,
+.round-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.round-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,229,255,0.1);
+}
+.round-input.filled { border-color: rgba(0,229,255,0.3); color: #fff; }
+.round-pill {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  min-width: 40px;
+  text-align: center;
+}
+.pill-low { background: rgba(255,51,85,0.12); color: var(--red); border: 1px solid rgba(255,51,85,0.2); }
+.pill-mid { background: rgba(255,230,0,0.08); color: var(--yellow); border: 1px solid rgba(255,230,0,0.15); }
+.pill-high { background: rgba(0,255,136,0.08); color: var(--green); border: 1px solid rgba(0,255,136,0.15); }
+.pill-empty { background: transparent; color: transparent; border: 1px solid transparent; }
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-analyze {
+  flex: 1;
+  padding: 16px;
+  background: var(--cyan);
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 3px;
+  min-width: 160px;
+}
+.btn-analyze:hover { background: #fff; box-shadow: 0 0 20px rgba(0,229,255,0.3); }
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-clear {
+  padding: 16px 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+/* ── SIGNAL OUTPUT ── */
+.signal-output {
+  display: none;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  position: relative;
+  animation: fadeUp 0.4s ease;
+}
+.signal-output.show { display: block; }
+.signal-output::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--green), transparent);
+  opacity: 0.6;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.signal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.signal-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+}
+.confidence-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border-radius: 2px;
+}
+.conf-high { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+.conf-mid { background: rgba(255,230,0,0.08); color: var(--yellow); border: 1px solid rgba(255,230,0,0.2); }
+.conf-low { background: rgba(255,51,85,0.08); color: var(--red); border: 1px solid rgba(255,51,85,0.2); }
+
+.signal-main {
+  text-align: center;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.signal-action {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(20px, 5vw, 32px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+.action-hold { color: var(--green); text-shadow: 0 0 20px rgba(0,255,136,0.3); }
+.action-early { color: var(--yellow); text-shadow: 0 0 20px rgba(255,230,0,0.3); }
+.action-safe { color: var(--red); text-shadow: 0 0 20px rgba(255,51,85,0.3); }
+
+.signal-target {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+.signal-target span {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-left: 8px;
+}
+
+.signal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-box-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.stat-box-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.stat-box-val.green { color: var(--green); }
+.stat-box-val.yellow { color: var(--yellow); }
+.stat-box-val.red { color: var(--red); }
+
+.signal-advice {
+  background: var(--bg2);
+  border-left: 3px solid var(--cyan);
+  padding: 14px 16px;
+  border-radius: 0 3px 3px 0;
+}
+.signal-advice-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+/* ── MINI CHART ── */
+.chart-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.chart-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  margin-top: 16px;
+}
+.chart-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  min-height: 4px;
+  transition: height 0.4s ease;
+  position: relative;
+}
+.chart-bar-val {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.bar-low { background: linear-gradient(to top, rgba(255,51,85,0.6), rgba(255,51,85,0.2)); }
+.bar-mid { background: linear-gradient(to top, rgba(255,230,0,0.6), rgba(255,230,0,0.2)); }
+.bar-high { background: linear-gradient(to top, rgba(0,255,136,0.6), rgba(0,255,136,0.2)); }
+.bar-empty { background: rgba(58,80,96,0.2); border: 1px dashed rgba(58,80,96,0.3); }
+
+/* ── SESSION HISTORY ── */
+.history-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.history-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb { background: var(--dim); }
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hist-rounds { color: var(--muted); flex: 1; }
+.hist-signal { font-weight: 700; }
+.hist-target { color: var(--text); }
+.hist-time { color: var(--dim); font-size: 9px; }
+.empty-history {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px 0;
+  letter-spacing: 2px;
+}
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  background: rgba(255,136,0,0.04);
+  border: 1px solid rgba(255,136,0,0.12);
+  border-radius: 3px;
+  padding: 14px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.disclaimer-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.disclaimer-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,136,0,0.7);
+  letter-spacing: 1px;
+  line-height: 1.7;
+}
+
+/* ── FOOTER ── */
+.tool-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.tool-footer a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 2px;
+  margin: 0 12px;
+  transition: color 0.2s;
+}
+.tool-footer a:hover { color: var(--cyan); }
+
+@media(max-width: 500px) {
+  .rounds-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .round-input { padding: 10px 4px; font-size: 14px; }
+  .signal-stats { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">VAULT<span>MARKETS</span></a>
+  <div class="nav-tool">✈️ AVIATOR SIGNAL</div>
+  <a href="vaultmarkets-main.html" class="nav-back">← DASHBOARD</a>
+</nav>
+
+<div class="wrap">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-tag">// CRASH INTELLIGENCE ENGINE</div>
+    <div class="page-title">AVIATOR <span>SIGNAL</span></div>
+    <div class="page-desc">Enter your last 5 rounds — get your target multiplier instantly</div>
+  </div>
+
+  <!-- LIVE MULTIPLIER -->
+  <div class="live-display">
+    <div class="live-label">// LIVE SESSION MULTIPLIER</div>
+    <div class="live-mult" id="liveMult">1.00</div>
+    <div class="live-mult-x">MULTIPLIER</div>
+    <div class="live-status">
+      <div class="live-dot"></div>
+      <div class="live-status-text" id="liveStatusText">SESSION ACTIVE</div>
+    </div>
+  </div>
+
+  <!-- INPUT SECTION -->
+  <div class="input-section">
+    <div class="section-title">// ENTER LAST 5 ROUNDS</div>
+
+    <div class="rounds-grid" id="roundsGrid">
+      <div class="round-slot">
+        <div class="round-label">R1</div>
+        <input class="round-input" id="r1" type="number" placeholder="1.00" min="1" step="0.01" oninput="onRoundInput(0)">
+        <div class="round-pill pill-empty" id="pill0">—</div>
+      </div>
+      <div class="round-slot">
+        <div class="round-label">R2</div>
+        <input class="round-input" id="r2" type="number" placeholder="1.00" min="1" step="0.01" oninput="onRoundInput(1)">
+        <div class="round-pill pill-empty" id="pill1">—</div>
+      </div>
+      <div class="round-slot">
+        <div class="round-label">R3</div>
+        <input class="round-input" id="r3" type="number" placeholder="1.00" min="1" step="0.01" oninput="onRoundInput(2)">
+        <div class="round-pill pill-empty" id="pill2">—</div>
+      </div>
+      <div class="round-slot">
+        <div class="round-label">R4</div>
+        <input class="round-input" id="r4" type="number" placeholder="1.00" min="1" step="0.01" oninput="onRoundInput(3)">
+        <div class="round-pill pill-empty" id="pill3">—</div>
+      </div>
+      <div class="round-slot">
+        <div class="round-label">R5</div>
+        <input class="round-input" id="r5" type="number" placeholder="1.00" min="1" step="0.01" oninput="onRoundInput(4)">
+        <div class="round-pill pill-empty" id="pill4">—</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()" disabled>▶ ANALYZE PATTERN</button>
+      <button class="btn-clear" onclick="clearAll()">✕ CLEAR</button>
+    </div>
+  </div>
+
+  <!-- SIGNAL OUTPUT -->
+  <div class="signal-output" id="signalOutput">
+    <div class="signal-header">
+      <div class="signal-label">// SIGNAL RESULT</div>
+      <div class="confidence-badge conf-high" id="confBadge">HIGH CONFIDENCE</div>
+    </div>
+
+    <div class="signal-main">
+      <div class="signal-action" id="signalAction">HOLD HIGHER</div>
+      <div class="signal-target">
+        TARGET MULTIPLIER <span id="signalTarget">—</span>
+      </div>
+    </div>
+
+    <div class="signal-stats">
+      <div class="stat-box">
+        <div class="stat-box-label">AVG MULT</div>
+        <div class="stat-box-val" id="statAvg">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">TREND</div>
+        <div class="stat-box-val" id="statTrend">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">VOLATILITY</div>
+        <div class="stat-box-val" id="statVol">—</div>
+      </div>
+    </div>
+
+    <div class="signal-advice">
+      <div class="signal-advice-text" id="signalAdvice">—</div>
+    </div>
+  </div>
+
+  <!-- MINI CHART -->
+  <div class="chart-section">
+    <div class="section-title">// ROUND PATTERN CHART</div>
+    <div class="chart-wrap" id="chartWrap">
+      <div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>
+      <div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>
+      <div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>
+      <div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>
+      <div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>
+    </div>
+  </div>
+
+  <!-- SESSION HISTORY -->
+  <div class="history-section">
+    <div class="section-title">// SESSION HISTORY</div>
+    <div class="history-list" id="historyList">
+      <div class="empty-history">// NO ANALYSIS YET — ENTER ROUNDS ABOVE</div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">⚠️</div>
+    <div class="disclaimer-text">
+      VAULTMARKETS AVIATOR SIGNAL IS AN ANALYTICAL TOOL FOR EDUCATIONAL AND ENTERTAINMENT PURPOSES ONLY.
+      CRASH GAMES ARE RANDOM — NO TOOL CAN GUARANTEE OUTCOMES. ALWAYS BET RESPONSIBLY.
+      NEVER BET MORE THAN YOU CAN AFFORD TO LOSE. 18+ ONLY.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="tool-footer">
+    <a href="vaultmarkets-main.html">← DASHBOARD</a>
+    <a href="cipher-score.html">CIPHER SCORE</a>
+    <a href="cipher-hoops.html">CIPHER HOOPS</a>
+    <a href="betsmart.html">BETSMART</a>
+    <a href="bettruth.html">BETTRUTH</a>
+  </div>
+
+</div>
+
+<script>
+// ── LIVE MULTIPLIER ANIMATION ──
+let liveM = 1.00;
+let liveTarget = +(2 + Math.random() * 6).toFixed(2);
+let livePhase = 'flying';
+let liveSpeed = 0.03;
+
+function animateLive() {
+  const el = document.getElementById('liveMult');
+  const st = document.getElementById('liveStatusText');
+
+  if (livePhase === 'flying') {
+    liveSpeed = Math.min(liveSpeed * 1.002, 0.15);
+    liveM = +(liveM + liveSpeed).toFixed(2);
+    el.textContent = liveM.toFixed(2);
+
+    if (liveM < 2) {
+      el.style.color = 'var(--green)';
+      el.style.textShadow = '0 0 40px rgba(0,255,136,0.3)';
+    } else if (liveM < 5) {
+      el.style.color = 'var(--yellow)';
+      el.style.textShadow = '0 0 40px rgba(255,230,0,0.3)';
+    } else {
+      el.style.color = 'var(--red)';
+      el.style.textShadow = '0 0 40px rgba(255,51,85,0.3)';
+    }
+
+    if (liveM >= liveTarget) {
+      livePhase = 'crashed';
+      el.style.color = 'var(--red)';
+      st.textContent = '// CRASHED AT ' + liveTarget.toFixed(2) + 'x';
+      st.style.color = 'var(--red)';
+      setTimeout(() => {
+        liveM = 1.00;
+        liveSpeed = 0.03;
+        liveTarget = +(1.2 + Math.random() * 8).toFixed(2);
+        livePhase = 'flying';
+        el.style.color = 'var(--green)';
+        st.textContent = 'SESSION ACTIVE';
+        st.style.color = 'var(--green)';
+      }, 2200);
+    }
+  }
+}
+setInterval(animateLive, 100);
+
+// ── ROUND INPUT HANDLING ──
+const inputs = ['r1','r2','r3','r4','r5'];
+let sessionHistory = [];
+
+function getPillClass(val) {
+  if (val <= 1.5) return 'pill-low';
+  if (val <= 3.0) return 'pill-mid';
+  return 'pill-high';
+}
+
+function getPillText(val) {
+  if (val <= 1.5) return 'LOW';
+  if (val <= 3.0) return 'MID';
+  return 'HIGH';
+}
+
+function onRoundInput(idx) {
+  const input = document.getElementById(inputs[idx]);
+  const pill = document.getElementById('pill' + idx);
+  const val = parseFloat(input.value);
+
+  if (!isNaN(val) && val >= 1) {
+    input.classList.add('filled');
+    pill.className = 'round-pill ' + getPillClass(val);
+    pill.textContent = getPillText(val);
+  } else {
+    input.classList.remove('filled');
+    pill.className = 'round-pill pill-empty';
+    pill.textContent = '—';
+  }
+
+  updateChart();
+  checkReady();
+}
+
+function checkReady() {
+  const vals = getRounds();
+  const filled = vals.filter(v => !isNaN(v) && v >= 1).length;
+  document.getElementById('analyzeBtn').disabled = filled < 3;
+}
+
+function getRounds() {
+  return inputs.map(id => {
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? null : v;
+  }).filter(v => v !== null && v >= 1);
+}
+
+function getAllRounds() {
+  return inputs.map(id => {
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) || v < 1 ? null : v;
+  });
+}
+
+// ── CHART UPDATE ──
+function updateChart() {
+  const all = getAllRounds();
+  const valid = all.filter(v => v !== null);
+  const max = valid.length > 0 ? Math.max(...valid, 3) : 3;
+  const wrap = document.getElementById('chartWrap');
+
+  wrap.innerHTML = all.map((v, i) => {
+    if (v === null) {
+      return `<div class="chart-bar bar-empty" style="height:100%"><div class="chart-bar-val" style="color:var(--muted)">—</div></div>`;
+    }
+    const pct = Math.max(8, Math.round((v / max) * 100));
+    const cls = v <= 1.5 ? 'bar-low' : v <= 3 ? 'bar-mid' : 'bar-high';
+    const col = v <= 1.5 ? 'var(--red)' : v <= 3 ? 'var(--yellow)' : 'var(--green)';
+    return `<div class="chart-bar ${cls}" style="height:${pct}%"><div class="chart-bar-val" style="color:${col}">${v.toFixed(2)}x</div></div>`;
+  }).join('');
+}
+
+// ── ANALYSIS ENGINE ──
+function analyze() {
+  const rounds = getRounds();
+  if (rounds.length < 3) return;
+
+  const avg = rounds.reduce((a, b) => a + b, 0) / rounds.length;
+  const last = rounds[rounds.length - 1];
+  const sorted = [...rounds].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const max = Math.max(...rounds);
+  const min = Math.min(...rounds);
+  const range = max - min;
+  const recent = rounds.slice(-2);
+  const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+
+  // Trend detection
+  let trendUp = 0;
+  for (let i = 1; i < rounds.length; i++) {
+    if (rounds[i] > rounds[i-1]) trendUp++;
+    else trendUp--;
+  }
+
+  // Volatility
+  const variance = rounds.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / rounds.length;
+  const stdDev = Math.sqrt(variance);
+  const volLabel = stdDev < 1 ? 'LOW' : stdDev < 2.5 ? 'MID' : 'HIGH';
+  const volClass = stdDev < 1 ? 'green' : stdDev < 2.5 ? 'yellow' : 'red';
+
+  // Signal logic
+  let action, actionClass, target, confidence, confClass, advice;
+
+  const lowStreak = rounds.filter(v => v < 2).length;
+  const highStreak = rounds.filter(v => v >= 3).length;
+
+  if (lowStreak >= 3) {
+    // Many lows — possible rebound
+    action = 'HOLD HIGHER';
+    actionClass = 'action-hold';
+    target = +(avg * 1.8 + 0.5 + Math.random() * 0.5).toFixed(2);
+    confidence = 'HIGH CONFIDENCE';
+    confClass = 'conf-high';
+    advice = `// PATTERN: ${lowStreak} LOW rounds detected. Rebound probability elevated. Suggested target: ${target}x. Consider entering early and holding firm.`;
+  } else if (highStreak >= 3) {
+    // Many highs — possible correction
+    action = 'CASH EARLY';
+    actionClass = 'action-early';
+    target = +(1.5 + Math.random() * 0.8).toFixed(2);
+    confidence = 'MID CONFIDENCE';
+    confClass = 'conf-mid';
+    advice = `// PATTERN: ${highStreak} HIGH rounds detected. Correction likely incoming. Recommended: cash out early around ${target}x. Protect your bankroll.`;
+  } else if (trendUp > 0 && recentAvg > avg) {
+    // Upward momentum
+    action = 'HOLD HIGHER';
+    actionClass = 'action-hold';
+    target = +(avg * 1.5 + Math.random() * 0.8).toFixed(2);
+    confidence = 'MID CONFIDENCE';
+    confClass = 'conf-mid';
+    advice = `// PATTERN: Upward momentum detected. Recent rounds averaging ${recentAvg.toFixed(2)}x. Target ${target}x with stop-loss at 1.5x.`;
+  } else if (stdDev > 2.5) {
+    // High volatility — play safe
+    action = 'PLAY SAFE';
+    actionClass = 'action-safe';
+    target = +(1.5 + Math.random() * 0.5).toFixed(2);
+    confidence = 'LOW CONFIDENCE';
+    confClass = 'conf-low';
+    advice = `// PATTERN: High volatility session (±${stdDev.toFixed(2)}). Pattern unstable. Recommended: play safe, take small wins at ${target}x. Wait for pattern to stabilize.`;
+  } else {
+    // Neutral
+    action = 'PLAY SAFE';
+    actionClass = 'action-safe';
+    target = +(avg * 1.2 + Math.random() * 0.3).toFixed(2);
+    confidence = 'MID CONFIDENCE';
+    confClass = 'conf-mid';
+    advice = `// PATTERN: Neutral session. Average ${avg.toFixed(2)}x. No strong signal detected. Suggested: conservative exit at ${target}x. Monitor next 2 rounds.`;
+  }
+
+  // Render signal
+  document.getElementById('signalOutput').classList.add('show');
+  document.getElementById('signalAction').textContent = action;
+  document.getElementById('signalAction').className = 'signal-action ' + actionClass;
+  document.getElementById('signalTarget').textContent = target + 'x';
+  document.getElementById('confBadge').textContent = confidence;
+  document.getElementById('confBadge').className = 'confidence-badge ' + confClass;
+  document.getElementById('statAvg').textContent = avg.toFixed(2) + 'x';
+  document.getElementById('statAvg').className = 'stat-box-val ' + (avg >= 3 ? 'green' : avg >= 1.8 ? 'yellow' : 'red');
+  document.getElementById('statTrend').textContent = trendUp > 0 ? '↑ UP' : trendUp < 0 ? '↓ DOWN' : '→ FLAT';
+  document.getElementById('statTrend').className = 'stat-box-val ' + (trendUp > 0 ? 'green' : trendUp < 0 ? 'red' : 'yellow');
+  document.getElementById('statVol').textContent = volLabel;
+  document.getElementById('statVol').className = 'stat-box-val ' + volClass;
+  document.getElementById('signalAdvice').textContent = advice;
+
+  // Add to history
+  addHistory(rounds, action, target);
+
+  // Scroll to signal
+  document.getElementById('signalOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── HISTORY ──
+function addHistory(rounds, action, target) {
+  const entry = {
+    rounds: rounds.map(r => r.toFixed(2) + 'x').join(' · '),
+    action,
+    target: target + 'x',
+    time: new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+  };
+  sessionHistory.unshift(entry);
+  if (sessionHistory.length > 10) sessionHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (sessionHistory.length === 0) {
+    list.innerHTML = '<div class="empty-history">// NO ANALYSIS YET — ENTER ROUNDS ABOVE</div>';
+    return;
+  }
+  const actionColors = {
+    'HOLD HIGHER': 'var(--green)',
+    'CASH EARLY': 'var(--yellow)',
+    'PLAY SAFE': 'var(--red)'
+  };
+  list.innerHTML = sessionHistory.map(h => `
+    <div class="history-item">
+      <span class="hist-rounds">${h.rounds}</span>
+      <span class="hist-signal" style="color:${actionColors[h.action] || 'var(--cyan)'}">${h.action}</span>
+      <span class="hist-target">→ ${h.target}</span>
+      <span class="hist-time">${h.time}</span>
+    </div>
+  `).join('');
+}
+
+// ── CLEAR ──
+function clearAll() {
+  inputs.forEach((id, i) => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('filled');
+    const pill = document.getElementById('pill' + i);
+    pill.className = 'round-pill pill-empty';
+    pill.textContent = '—';
+  });
+  document.getElementById('signalOutput').classList.remove('show');
+  document.getElementById('analyzeBtn').disabled = true;
+  updateChart();
+}
+</script>
+</body>
+</html>
