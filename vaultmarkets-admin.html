@@ -555,6 +555,7 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
     <button class="admin-tab" onclick="switchTab('features',this)">⚙️ FEATURES</button>
     <button class="admin-tab" onclick="switchTab('aviator',this)">✈️ AVIATOR</button>
     <button class="admin-tab" onclick="switchTab('sports',this)">⚽ SPORTS</button>
+    <button class="admin-tab" onclick="switchTab('codes',this)">🎟️ CODES</button>
     <button class="admin-tab" onclick="switchTab('security',this)">🔒 SECURITY</button>
   </div>
 
@@ -958,6 +959,97 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
           <div class="form-hint">// Max rows in the odds table</div>
         </div>
       </div>
+    </div>
+
+    <!-- CODES TAB -->
+    <div class="tab-panel" id="tab-codes">
+
+      <!-- CODE GENERATOR -->
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🎟️</span> CODE GENERATOR</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="form-row" style="margin:0">
+            <label class="form-label">// PLAN</label>
+            <select class="form-input" id="cg-plan" onchange="updateExpiry()">
+              <option value="7">STARTER — 7 Days (₦5,000)</option>
+              <option value="30" selected>MONTHLY — 30 Days (₦15,000)</option>
+              <option value="90">PRO — 90 Days (₦35,000)</option>
+              <option value="180">ELITE — 180 Days (₦60,000)</option>
+              <option value="custom">CUSTOM DAYS</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin:0" id="customDaysRow" style="display:none">
+            <label class="form-label">// CUSTOM DAYS</label>
+            <input type="number" class="form-input" id="cg-custom" value="14" min="1" max="999" oninput="updateExpiry()">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div>
+            <div class="form-label">// START DATE</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan);padding:12px 16px;background:var(--bg2);border:1px solid var(--border);" id="cg-start">—</div>
+          </div>
+          <div>
+            <div class="form-label">// EXPIRY DATE</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--red);padding:12px 16px;background:var(--bg2);border:1px solid var(--border);" id="cg-expiry">—</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="test-btn" style="border-color:var(--green);color:var(--green);flex:1;padding:14px;" onclick="generateCode()">⚡ GENERATE CODE</button>
+          <button class="test-btn" onclick="generateCode()" style="flex:1;padding:14px;">🔄 REGENERATE</button>
+        </div>
+
+        <!-- GENERATED CODE OUTPUT -->
+        <div id="cg-output" style="display:none;">
+          <div style="background:var(--bg2);border:1px solid rgba(0,255,136,0.25);padding:20px;margin-bottom:14px;position:relative;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;margin-bottom:8px;">// GENERATED CODE</div>
+            <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--green);letter-spacing:4px;" id="cg-code-display">—</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;" id="cg-plan-display">—</div>
+          </div>
+
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:16px;margin-bottom:14px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;">// PASTE THIS LINE INTO vaultmarkets-access.html</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;" id="cg-snippet">—</div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="test-btn" style="border-color:var(--green);color:var(--green);flex:1;" onclick="copySnippet()">📋 COPY SNIPPET</button>
+            <button class="test-btn" style="flex:1;" onclick="copyCodeOnly()">🎟️ COPY CODE ONLY</button>
+            <button class="test-btn" style="border-color:var(--purple);color:var(--purple);flex:1;" onclick="copyWaMessage()">📲 COPY WHATSAPP MSG</button>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:10px;letter-spacing:1px;">
+            // After copying snippet — open vaultmarkets-access.html → find VALID_CODES → paste the line inside the object → save → upload to GitHub
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE CODES LIST -->
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">📋</span> GENERATED CODES LOG</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;">
+          // Codes generated this session — clears on page reload. Keep your own record.
+        </div>
+        <div id="codes-log">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// NO CODES GENERATED YET</div>
+        </div>
+        <button class="test-btn" style="border-color:var(--red);color:var(--red);margin-top:14px;" onclick="clearLog()">✕ CLEAR LOG</button>
+      </div>
+
+      <!-- EXPIRY CHECKER -->
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🔍</span> CODE EXPIRY CHECKER</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;">
+          // Check when a code expires by pasting the timestamp
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <input type="number" class="form-input" id="check-ts" placeholder="Paste timestamp e.g. 1767225600000" style="flex:2;">
+          <button class="test-btn" onclick="checkTimestamp()" style="flex:1;">CHECK</button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan);margin-top:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);display:none;" id="ts-result">—</div>
+      </div>
+
     </div>
 
     <!-- SECURITY TAB -->
@@ -1372,9 +1464,126 @@ function showToast(msg, isError) {
 }
 
 // ═══════════════════════════════
+// CODE GENERATOR
+// ═══════════════════════════════
+let codesLog = [];
+let currentCode = '';
+let currentExpiry = 0;
+
+function updateExpiry() {
+  const plan = document.getElementById('cg-plan').value;
+  const customRow = document.getElementById('customDaysRow');
+
+  let days = parseInt(plan);
+  if (plan === 'custom') {
+    customRow.style.display = 'block';
+    days = parseInt(document.getElementById('cg-custom').value) || 14;
+  } else {
+    customRow.style.display = 'none';
+  }
+
+  const now = new Date();
+  const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+  document.getElementById('cg-start').textContent = now.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+  document.getElementById('cg-expiry').textContent = expiry.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+
+  currentExpiry = expiry.getTime();
+}
+
+function generateCode() {
+  // Generate random VM-XXXXXXXX code
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'VM-';
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  currentCode = code;
+
+  updateExpiry();
+
+  const plan = document.getElementById('cg-plan').value;
+  const planNames = {
+    '7': 'STARTER — 7 Days',
+    '30': 'MONTHLY — 30 Days',
+    '90': 'PRO — 90 Days',
+    '180': 'ELITE — 180 Days',
+    'custom': 'CUSTOM'
+  };
+  const planLabel = planNames[plan] || 'CUSTOM';
+  const expiryDate = document.getElementById('cg-expiry').textContent;
+  const snippet = `  '${code}': ${currentExpiry}, // ${planLabel} — EXPIRES ${expiryDate}`;
+
+  document.getElementById('cg-code-display').textContent = code;
+  document.getElementById('cg-plan-display').textContent = `// ${planLabel} — EXPIRES ${expiryDate}`;
+  document.getElementById('cg-snippet').textContent = snippet;
+  document.getElementById('cg-output').style.display = 'block';
+
+  // Add to log
+  addToLog(code, planLabel, expiryDate, currentExpiry);
+}
+
+function addToLog(code, plan, expiry, ts) {
+  codesLog.unshift({ code, plan, expiry, ts, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) });
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('codes-log');
+  if (codesLog.length === 0) {
+    el.innerHTML = '<div style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// NO CODES GENERATED YET</div>';
+    return;
+  }
+  el.innerHTML = codesLog.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--green);">${c.code}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);">${c.plan}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--red);">EXP: ${c.expiry}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);">${c.time}</span>
+    </div>
+  `).join('');
+}
+
+function clearLog() {
+  if (!confirm('Clear code log?')) return;
+  codesLog = [];
+  renderLog();
+}
+
+function copySnippet() {
+  const s = document.getElementById('cg-snippet').textContent;
+  navigator.clipboard.writeText(s).then(() => showToast('📋 SNIPPET COPIED — PASTE INTO access.html'));
+}
+
+function copyCodeOnly() {
+  navigator.clipboard.writeText(currentCode).then(() => showToast('🎟️ CODE COPIED: ' + currentCode));
+}
+
+function copyWaMessage() {
+  const plan = document.getElementById('cg-plan-display').textContent.replace('// ','');
+  const msg = `✅ *VaultMarkets Access Code*\n\nYour code: *${currentCode}*\nPlan: ${plan}\n\nHow to activate:\n1. Visit bet.genesisvault.xyz\n2. Click "ENTER ACCESS CODE"\n3. Paste your code\n4. Enjoy full access 🔥\n\n_Contact us on WhatsApp if you need help._`;
+  navigator.clipboard.writeText(msg).then(() => showToast('📲 WHATSAPP MESSAGE COPIED'));
+}
+
+function checkTimestamp() {
+  const ts = parseInt(document.getElementById('check-ts').value);
+  if (isNaN(ts)) { showToast('// INVALID TIMESTAMP', true); return; }
+  const d = new Date(ts);
+  const now = new Date();
+  const expired = ts < now.getTime();
+  const result = document.getElementById('ts-result');
+  result.style.display = 'block';
+  result.style.color = expired ? 'var(--red)' : 'var(--green)';
+  result.textContent = expired
+    ? `✕ EXPIRED — Was valid until ${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`
+    : `✓ VALID — Expires ${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} (${Math.ceil((ts-now.getTime())/86400000)} days left)`;
+}
+
+// ═══════════════════════════════
 // INIT
 // ═══════════════════════════════
 loadConfig();
+updateExpiry();
 document.getElementById('loginInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
