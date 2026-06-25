@@ -173,6 +173,16 @@ body::before {
 }
 .success-msg.show { display: block; }
 
+.loading-msg {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+  display: none;
+}
+.loading-msg.show { display: block; }
+
 /* How to get access card */
 .how-card {
   background: var(--bg2);
@@ -291,6 +301,7 @@ body::before {
     <button class="unlock-btn" onclick="unlock()" id="unlockBtn">
       ▶ UNLOCK PLATFORM
     </button>
+    <div class="loading-msg" id="loadingMsg">// VERIFYING CODE...</div>
     <div class="error-msg" id="errorMsg">// INVALID CODE — CHECK AND TRY AGAIN</div>
     <div class="success-msg" id="successMsg">// ACCESS GRANTED — LOADING PLATFORM...</div>
   </div>
@@ -343,27 +354,26 @@ body::before {
 </div>
 
 <script>
-// ── ACCESS CODES ──────────────────────────────────────────────
-// Add valid codes here. Format: 'CODE': expiry timestamp (0 = never expires)
-// To generate a code: VM- + 8 random uppercase chars e.g. VM-AX7KPQ2R
-const VALID_CODES = {
-  'VM-DEMO2026': 0,        // demo code, never expires
-  // Add paid codes below as you sell access:
-  // 'VM-AX7KPQ2R': 1767225600000,  // expires Jan 1 2026
-};
+// ── CONFIG ──────────────────────────────────────────────────────
+// Replace with your actual Vercel backend URL
+const BACKEND_URL = 'https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/validate';
 
 const SESSION_KEY = 'vm_access';
 const CODE_KEY = 'vm_code';
 
-function unlock() {
+// ── UNLOCK ──────────────────────────────────────────────────────
+async function unlock() {
   const input = document.getElementById('codeInput');
   const code = input.value.trim().toUpperCase();
   const errMsg = document.getElementById('errorMsg');
   const successMsg = document.getElementById('successMsg');
+  const loadingMsg = document.getElementById('loadingMsg');
   const btn = document.getElementById('unlockBtn');
 
+  // Reset state
   errMsg.classList.remove('show');
   successMsg.classList.remove('show');
+  loadingMsg.classList.remove('show');
   input.classList.remove('error', 'success');
 
   if (!code || code.length < 4) {
@@ -373,37 +383,50 @@ function unlock() {
     return;
   }
 
-  const expiry = VALID_CODES[code];
-
-  if (expiry === undefined) {
-    input.classList.add('error');
-    errMsg.textContent = '// INVALID CODE — CHECK AND TRY AGAIN';
-    errMsg.classList.add('show');
-    return;
-  }
-
-  if (expiry !== 0 && Date.now() > expiry) {
-    input.classList.add('error');
-    errMsg.textContent = '// CODE EXPIRED — RENEW YOUR SUBSCRIPTION';
-    errMsg.classList.add('show');
-    return;
-  }
-
-  // Valid — grant access
-  input.classList.add('success');
-  successMsg.classList.add('show');
+  // Show loading
   btn.disabled = true;
+  loadingMsg.classList.add('show');
 
-  // Store session
-  localStorage.setItem(SESSION_KEY, 'true');
-  localStorage.setItem(CODE_KEY, code);
-  localStorage.setItem('vm_access_time', Date.now().toString());
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
 
-  // Redirect to main platform
-  setTimeout(() => {
-    const redirect = getRedirectTarget();
-    window.location.href = redirect;
-  }, 1200);
+    const data = await res.json();
+    loadingMsg.classList.remove('show');
+
+    if (!data.valid) {
+      input.classList.add('error');
+      errMsg.textContent = '// ' + (data.error || 'INVALID CODE — CHECK AND TRY AGAIN');
+      errMsg.classList.add('show');
+      btn.disabled = false;
+      return;
+    }
+
+    // Valid — grant access
+    input.classList.add('success');
+    successMsg.classList.add('show');
+
+    // Store session
+    localStorage.setItem(SESSION_KEY, 'true');
+    localStorage.setItem(CODE_KEY, code);
+    localStorage.setItem('vm_plan', data.plan || 'STARTER');
+    localStorage.setItem('vm_access_time', Date.now().toString());
+
+    // Redirect
+    setTimeout(() => {
+      window.location.href = getRedirectTarget();
+    }, 1200);
+
+  } catch (e) {
+    loadingMsg.classList.remove('show');
+    input.classList.add('error');
+    errMsg.textContent = '// CONNECTION ERROR — TRY AGAIN';
+    errMsg.classList.add('show');
+    btn.disabled = false;
+  }
 }
 
 function getRedirectTarget() {
@@ -411,11 +434,10 @@ function getRedirectTarget() {
   return params.get('redirect') || 'vaultmarkets-main.html';
 }
 
-// Auto-check if already has valid session
+// Auto-redirect if already has valid session
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem(SESSION_KEY) === 'true') {
-    const redirect = getRedirectTarget();
-    window.location.href = redirect;
+    window.location.href = getRedirectTarget();
   }
 });
 </script>
