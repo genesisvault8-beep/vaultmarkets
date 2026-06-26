@@ -936,8 +936,8 @@ function runSpreadModel() {
 
   // Projected scores using pace-adjusted efficiency
   const paceAdj = gamePace / lgPace;
-  const t1Score = (t1Ortg / lgOrtg) * (t2Drtg / lgOrtg) * lgOrtg * paceAdj * 0.48 + 2;
-  const t2Score = (t2Ortg / lgOrtg) * (t1Drtg / lgOrtg) * lgOrtg * paceAdj * 0.48 + 2;
+  const t1Score = (t1Ortg / lgOrtg) * (t2Drtg / lgOrtg) * lgOrtg * paceAdj * 0.82 + 5;
+  const t2Score = (t2Ortg / lgOrtg) * (t1Drtg / lgOrtg) * lgOrtg * paceAdj * 0.82 + 5;
 
   // Home court advantage (~3 pts)
   const t1Final = Math.round(t1Score + 2.5);
@@ -1044,8 +1044,8 @@ function runLiveComeback() {
 
   // Expected remaining scoring
   const avgScoringRate = (t1Ortg + t2Ortg) / 2 / 100;
-  const t1RemScore = Math.round(t1Ortg * timeFactor * 0.48 * (t2Drtg / 110));
-  const t2RemScore = Math.round(t2Ortg * timeFactor * 0.48 * (t1Drtg / 110));
+  const t1RemScore = Math.round(t1Ortg * timeFactor * 0.82 * (t2Drtg / 110));
+  const t2RemScore = Math.round(t2Ortg * timeFactor * 0.82 * (t1Drtg / 110));
 
   const t1Projected = t1Score + t1RemScore;
   const t2Projected = t2Score + t2RemScore;
