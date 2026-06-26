@@ -906,6 +906,11 @@
               Provably fair systems let you verify that crash results weren't manipulated. The game uses cryptographic hashing — if the hash of the server seed matches, the result is genuine. If it doesn't match, the game cheated you.
             </div>
           </div>
+          <div style="margin-top:12px;background:rgba(255,230,0,0.05);border:1px solid rgba(255,230,0,0.2);border-radius:3px;padding:10px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:#ffe600;letter-spacing:0.1em;line-height:1.8;">
+              ⚠ DISCLAIMER: This tool uses a generalised SHA-256 derivation formula. Each platform (Aviator, BC.Game, Spaceman etc.) uses its own proprietary hash-to-multiplier algorithm. A MISMATCH result does not always indicate manipulation — it may mean the platform uses a different formula. Always use the platform's own official verification tool for conclusive results.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1024,14 +1029,14 @@ function calcCashout() {
   document.getElementById('bust-pct-label').style.color = bustRisk < 30 ? '#00ff88' : bustRisk < 60 ? '#ffe600' : '#ff003c';
   document.getElementById('bust-bar').style.width = bustRisk + '%';
   document.getElementById('co-winchance').textContent = winChanceClamped.toFixed(1) + '%';
-  document.getElementById('co-ev').textContent = (ev >= 0 ? '+' : '') + '$' + ev.toFixed(3);
+  document.getElementById('co-ev').textContent = (ev >= 0 ? '+' : '') + '$' + ev.toFixed(2);
   document.getElementById('co-ev').style.color = ev >= 0 ? '#00ff88' : '#ff003c';
   document.getElementById('co-survive').textContent = surviveRounds + 'x';
 
   // Alerts
   const alerts = [];
-  if (ev < 0) alerts.push({type:'red', tag:'NEGATIVE EV DETECTED', msg:`At ${recommended}x cashout with ${edge}% house edge, expected value is ${ev.toFixed(3)} per bet. The house has the long-term edge.`});
-  else alerts.push({type:'green', tag:'POSITIVE EV WINDOW', msg:`EV is ${ev.toFixed(3)} per bet. This edge is fragile — variance will still cause losing streaks.`});
+  if (ev < 0) alerts.push({type:'red', tag:'NEGATIVE EV DETECTED', msg:`At ${recommended}x cashout with ${edge}% house edge, expected value is ${ev.toFixed(2)} per bet. The house has the long-term edge.`});
+  else alerts.push({type:'green', tag:'POSITIVE EV WINDOW', msg:`EV is ${ev.toFixed(2)} per bet. This edge is fragile — variance will still cause losing streaks.`});
 
   if (bet / bank > 0.05) alerts.push({type:'red', tag:'BET SIZE CRITICAL', msg:`Betting ${((bet/bank)*100).toFixed(1)}% of bankroll per round. Risk of ruin is extremely high. Keep bets under 2-3% of bankroll.`});
   else if (bet / bank > 0.02) alerts.push({type:'yellow', tag:'BET SIZE WARNING', msg:`Betting ${((bet/bank)*100).toFixed(1)}% of bankroll. Acceptable but reduce for longer survival.`});
@@ -1198,8 +1203,10 @@ function guardBankroll() {
   const p = winChance;
   const q = 1 - p;
   const b = cashout - 1;
-  const kelly = Math.max(((b * p - q) / b) * 100, 0);
+  const kellyRaw = ((b * p - q) / b) * 100;
+  const kelly = Math.max(kellyRaw, 0);
   const kellyBet = (kelly / 100) * start;
+  const negativeEdge = kellyRaw <= 0;
 
   // Draw chart
   drawBankChart(history, start);
@@ -1208,10 +1215,12 @@ function guardBankroll() {
   document.getElementById('bk-maxdd').textContent = maxDD.toFixed(1) + '%';
   document.getElementById('bk-survrate').textContent = survRate;
   document.getElementById('bk-survrate').style.color = busted ? '#ff003c' : '#00ff88';
-  document.getElementById('bk-kelly').textContent = '$' + kellyBet.toFixed(2);
+  document.getElementById('bk-kelly').textContent = negativeEdge ? 'NO EDGE' : '$' + kellyBet.toFixed(2);
+  document.getElementById('bk-kelly').style.color = negativeEdge ? '#ff003c' : '#ffe600';
 
   const alerts = [];
-  if (kellyBet < bet) alerts.push({type:'red', tag:'OVERBETTING KELLY', msg:`Kelly suggests $${kellyBet.toFixed(2)} per bet. You're betting $${bet} — ${((bet/kellyBet - 1)*100).toFixed(0)}% over Kelly. Risk of ruin increases dramatically.`});
+  if (negativeEdge) alerts.push({type:'red', tag:'NEGATIVE EV — KELLY SAYS ZERO', msg:`At this house edge and cashout target, Kelly Criterion recommends $0 bet — this game has no positive edge. Do not bet.`});
+  else if (kellyBet < bet) alerts.push({type:'red', tag:'OVERBETTING KELLY', msg:`Kelly suggests $${kellyBet.toFixed(2)} per bet. You're betting $${bet} — ${((bet/kellyBet - 1)*100).toFixed(0)}% over Kelly. Risk of ruin increases dramatically.`});
   else alerts.push({type:'green', tag:'WITHIN KELLY RANGE', msg:`Your bet size is within Kelly Criterion limits. This maximizes long-term growth while managing ruin risk.`});
   if (maxDD > 40) alerts.push({type:'red', tag:'HIGH DRAWDOWN', msg:`Max drawdown hit ${maxDD.toFixed(1)}% in simulation. Psychologically very hard to recover from. Consider smaller bets.`});
   if (busted) alerts.push({type:'red', tag:'SIMULATION BUSTED', msg:`Bankroll hit stop-loss in this simulation. This WILL happen in real play. Never bet what you can't afford to lose.`});
