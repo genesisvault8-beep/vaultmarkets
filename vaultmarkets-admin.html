@@ -1158,40 +1158,35 @@ function saveConfig() {
 async function doLogin() {
   const pw = document.getElementById('loginInput').value.trim();
   const err = document.getElementById('loginError');
-  if (!pw) { err.textContent = '// TYPE YOUR PASSWORD FIRST'; return; }
+  if (!pw) return;
 
   const btn = document.querySelector('.login-btn');
   btn.textContent = 'AUTHENTICATING...';
   btn.disabled = true;
-  err.textContent = '// CONNECTING TO SERVER...';
 
   try {
-    err.textContent = `// HITTING: ${API_BASE}/vaultmarkets/admin/login`;
     const res = await fetch(`${API_BASE}/vaultmarkets/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pw })
     });
-    err.textContent = `// SERVER RESPONDED: HTTP ${res.status}`;
     const data = await res.json();
-    err.textContent = `// RESPONSE: ${JSON.stringify(data).substring(0,80)}`;
 
     if (data.success && data.token) {
       setToken(data.token);
-      err.textContent = '// SUCCESS — LOADING PANEL...';
-      setTimeout(() => {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        populateFields();
-        updateApiStatus();
-        loadLiveCodes();
-      }, 500);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      populateFields();
+      updateApiStatus();
+      loadLiveCodes();
     } else {
-      err.textContent = '// DENIED: ' + (data.error || 'INVALID PASSWORD');
+      err.textContent = '// ACCESS DENIED — INVALID PASSWORD';
       document.getElementById('loginInput').value = '';
+      setTimeout(() => err.textContent = '', 3000);
     }
   } catch (e) {
-    err.textContent = '// ERROR: ' + e.message;
+    err.textContent = '// CONNECTION ERROR — CHECK NETWORK';
+    setTimeout(() => err.textContent = '', 3000);
   } finally {
     btn.textContent = 'ACCESS ADMIN';
     btn.disabled = false;
