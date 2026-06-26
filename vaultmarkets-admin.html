@@ -1452,37 +1452,54 @@ function changePassword() {
 async function loadLiveCodes() {
   const el = document.getElementById('live-codes-list');
   if (!el) return;
-  el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// LOADING...</div>';
-
+  el.textContent = '// LOADING...';
   try {
-    const res = await fetch(`${API_BASE}/vaultmarkets/admin/codes`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
+    const res = await fetch(API_BASE + '/vaultmarkets/admin/codes', {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await res.json();
-
     if (!data.success || !data.codes.length) {
-      el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// NO CODES IN DATABASE</div>';
+      el.textContent = '// NO CODES IN DATABASE';
       return;
     }
-
     const now = Date.now();
-    el.innerHTML = data.codes.map(c => {
+    el.innerHTML = '';
+    data.codes.forEach(function(c) {
       const active = c.is_active === '1' || c.is_active === 1;
       const expMs = parseInt(c.expires_at) * 1000;
       const expired = expMs && now > expMs;
       const expDate = expMs ? new Date(expMs).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase() : 'NO EXPIRY';
       const statusColor = !active ? 'var(--red)' : expired ? 'var(--gold)' : 'var(--green)';
       const statusText = !active ? 'REVOKED' : expired ? 'EXPIRED' : 'ACTIVE';
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-        <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--green);">${c.code}</span>
-        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);">${c.plan || '—'}</span>
-        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);">EXP: ${expDate}</span>
-        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${statusColor};font-weight:700;">${statusText}</span>
-        ${active && !expired ? `<button onclick="revokeCode('${c.code}')" style="padding:4px 12px;background:transparent;border:1px solid rgba(255,51,85,0.4);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">REVOKE</button>` : ''}
-      </div>`;
-    }).join('');
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px;flex-wrap:wrap;gap:8px;';
+      const codeSpan = document.createElement('span');
+      codeSpan.style.cssText = 'font-family:monospace;font-size:13px;font-weight:700;color:var(--green);';
+      codeSpan.textContent = c.code;
+      const planSpan = document.createElement('span');
+      planSpan.style.cssText = 'font-family:monospace;font-size:9px;color:var(--cyan);';
+      planSpan.textContent = c.plan || '';
+      const expSpan = document.createElement('span');
+      expSpan.style.cssText = 'font-family:monospace;font-size:9px;color:var(--muted);';
+      expSpan.textContent = 'EXP: ' + expDate;
+      const statusSpan = document.createElement('span');
+      statusSpan.style.cssText = 'font-family:monospace;font-size:9px;color:' + statusColor + ';font-weight:700;';
+      statusSpan.textContent = statusText;
+      row.appendChild(codeSpan);
+      row.appendChild(planSpan);
+      row.appendChild(expSpan);
+      row.appendChild(statusSpan);
+      if (active && !expired) {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'padding:4px 12px;background:transparent;border:1px solid rgba(255,51,85,0.4);color:var(--red);font-family:monospace;font-size:9px;cursor:pointer;';
+        btn.textContent = 'REVOKE';
+        btn.onclick = function() { revokeCode(c.code); };
+        row.appendChild(btn);
+      }
+      el.appendChild(row);
+    });
   } catch (e) {
-    el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);text-align:center;padding:20px;letter-spacing:2px;">// ERROR LOADING CODES</div>';
+    el.textContent = '// ERROR: ' + e.message;
   }
 }
 
@@ -1634,7 +1651,7 @@ function copyCodeOnly() {
 }
 
 function copyWaMessage() {
-  const plan = document.getElementById('cg-plan-display').textContent.replace('// ','');
+  const plan = (document.getElementById('cg-plan-display') ? document.getElementById('cg-plan-display').textContent.replace('// ','') : 'PLAN');
   const msg = `✅ *VaultMarkets Access Code*\n\nYour code: *${currentCode}*\nPlan: ${plan}\n\nHow to activate:\n1. Visit bet.genesisvault.xyz\n2. Click "ENTER ACCESS CODE"\n3. Paste your code\n4. Enjoy full access 🔥\n\n_Contact us on WhatsApp if you need help._`;
   navigator.clipboard.writeText(msg).then(() => showToast('📲 WHATSAPP MESSAGE COPIED'));
 }
