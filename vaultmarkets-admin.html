@@ -1024,11 +1024,23 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
         </div>
       </div>
 
-      <!-- ACTIVE CODES LIST -->
+      <!-- LIVE CODES FROM TURSO -->
       <div class="admin-card">
-        <div class="card-title"><span class="card-title-icon">📋</span> GENERATED CODES LOG</div>
+        <div class="card-title"><span class="card-title-icon">📋</span> ALL CODES — LIVE FROM DATABASE</div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;">
-          // Codes generated this session — clears on page reload. Keep your own record.
+          // Live codes stored in Turso — click REVOKE to deactivate a code instantly
+        </div>
+        <div id="live-codes-list">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// LOADING...</div>
+        </div>
+        <button class="test-btn" style="margin-top:14px;" onclick="loadLiveCodes()">🔄 REFRESH</button>
+      </div>
+
+      <!-- SESSION LOG -->
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🕐</span> SESSION LOG</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:14px;">
+          // Codes generated this session only
         </div>
         <div id="codes-log">
           <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// NO CODES GENERATED YET</div>
@@ -1090,22 +1102,13 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
 
 <script>
 // ═══════════════════════════════
-// DEFAULT CONFIG
+// VERCEL API CONFIG
 // ═══════════════════════════════
-// Password is stored as a hash in localStorage, never in source code.
-// Default hash below = 'genesis2026' — change via admin panel immediately after first login.
-const DEFAULT_PASS_HASH = '7e3c5b2a9f1d4e8c6b0a2f5d9e3c7b1a4f8e2d6c0b9a5f3e7d1c4b8a2f6e0d9';
-function hashPass(p) {
-  // Simple FNV-1a 64-bit inspired hash (no crypto API needed, client-side only)
-  let h = 2166136261;
-  for (let i = 0; i < p.length; i++) {
-    h ^= p.charCodeAt(i);
-    h = (h * 16777619) >>> 0;
-  }
-  return h.toString(16).padStart(8,'0') + p.split('').reverse().reduce((a,c)=>{
-    let x = a ^ c.charCodeAt(0); return ((x * 16777619) >>> 0);
-  }, 2166136261).toString(16).padStart(8,'0');
-}
+const API_BASE = 'https://genesis-ai-backend-wheat.vercel.app';
+
+function getToken() { return sessionStorage.getItem('vm_admin_token'); }
+function setToken(t) { sessionStorage.setItem('vm_admin_token', t); }
+function clearToken() { sessionStorage.removeItem('vm_admin_token'); }
 const DEFAULTS = {
   password: null, // never stored in source — use localStorage
   apiKey: '',
@@ -1150,25 +1153,49 @@ function saveConfig() {
 }
 
 // ═══════════════════════════════
-// LOGIN
+// LOGIN — Vercel JWT Auth
 // ═══════════════════════════════
-function doLogin() {
-  const pw = document.getElementById('loginInput').value;
-  const storedHash = localStorage.getItem('vm_pass_hash') || DEFAULT_PASS_HASH;
-  if (hashPass(pw) === storedHash || pw === 'genesis2026' && !localStorage.getItem('vm_pass_hash')) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    populateFields();
-    updateApiStatus();
-  } else {
+async function doLogin() {
+  const pw = document.getElementById('loginInput').value.trim();
+  if (!pw) return;
+
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'AUTHENTICATING...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+
+    if (data.success && data.token) {
+      setToken(data.token);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      populateFields();
+      updateApiStatus();
+      loadLiveCodes();
+    } else {
+      const err = document.getElementById('loginError');
+      err.textContent = data.error || '// ACCESS DENIED — INVALID PASSWORD';
+      document.getElementById('loginInput').value = '';
+      setTimeout(() => err.textContent = '', 3000);
+    }
+  } catch (e) {
     const err = document.getElementById('loginError');
-    err.textContent = '// ACCESS DENIED — INVALID PASSWORD';
-    document.getElementById('loginInput').value = '';
+    err.textContent = '// CONNECTION ERROR — CHECK NETWORK';
     setTimeout(() => err.textContent = '', 3000);
+  } finally {
+    btn.textContent = 'ACCESS ADMIN';
+    btn.disabled = false;
   }
 }
 
 function logout() {
+  clearToken();
   document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginInput').value = '';
@@ -1411,31 +1438,63 @@ function showTestResult(id, success, msg) {
 // PASSWORD
 // ═══════════════════════════════
 function changePassword() {
-  const current = getVal('pwCurrent');
-  const newPw = getVal('pwNew');
-  const confirm = getVal('pwConfirm');
+  showTestResult('pwResult', null, '// PASSWORD IS NOW MANAGED VIA VERCEL ENV VAR (VM_ADMIN_SECRET) — UPDATE IT THERE');
+  showToast('// Change VM_ADMIN_SECRET in Vercel dashboard to update password');
+}
 
-  const storedHash = localStorage.getItem('vm_pass_hash') || DEFAULT_PASS_HASH;
-  if (hashPass(current) !== storedHash && !(current === 'genesis2026' && !localStorage.getItem('vm_pass_hash'))) {
-    showTestResult('pwResult', false, '// CURRENT PASSWORD INCORRECT');
-    return;
-  }
-  if (newPw.length < 6) {
-    showTestResult('pwResult', false, '// PASSWORD MUST BE AT LEAST 6 CHARACTERS');
-    return;
-  }
-  if (newPw !== confirm) {
-    showTestResult('pwResult', false, '// PASSWORDS DO NOT MATCH');
-    return;
-  }
+// ═══════════════════════════════
+// LIVE CODES — Turso via Vercel
+// ═══════════════════════════════
+async function loadLiveCodes() {
+  const el = document.getElementById('live-codes-list');
+  if (!el) return;
+  el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// LOADING...</div>';
 
-  localStorage.setItem('vm_pass_hash', hashPass(newPw));
-  saveConfig();
-  document.getElementById('pwCurrent').value = '';
-  document.getElementById('pwNew').value = '';
-  document.getElementById('pwConfirm').value = '';
-  showTestResult('pwResult', true, '✓ PASSWORD UPDATED SUCCESSFULLY');
-  showToast('🔒 PASSWORD CHANGED');
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/codes`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.codes.length) {
+      el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:2px;">// NO CODES IN DATABASE</div>';
+      return;
+    }
+
+    const now = Date.now();
+    el.innerHTML = data.codes.map(c => {
+      const active = c.is_active === '1' || c.is_active === 1;
+      const expMs = parseInt(c.expires_at) * 1000;
+      const expired = expMs && now > expMs;
+      const expDate = expMs ? new Date(expMs).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase() : 'NO EXPIRY';
+      const statusColor = !active ? 'var(--red)' : expired ? 'var(--gold)' : 'var(--green)';
+      const statusText = !active ? 'REVOKED' : expired ? 'EXPIRED' : 'ACTIVE';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--green);">${c.code}</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);">${c.plan || '—'}</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);">EXP: ${expDate}</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${statusColor};font-weight:700;">${statusText}</span>
+        ${active && !expired ? `<button onclick="revokeCode('${c.code}')" style="padding:4px 12px;background:transparent;border:1px solid rgba(255,51,85,0.4);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">REVOKE</button>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);text-align:center;padding:20px;letter-spacing:2px;">// ERROR LOADING CODES</div>';
+  }
+}
+
+async function revokeCode(code) {
+  if (!confirm(`Revoke code ${code}? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/revoke/${code}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (data.success) { showToast('✓ CODE REVOKED: ' + code); loadLiveCodes(); }
+    else showToast('// REVOKE FAILED', true);
+  } catch (e) {
+    showToast('// NETWORK ERROR', true);
+  }
 }
 
 // ═══════════════════════════════
@@ -1490,36 +1549,48 @@ function updateExpiry() {
   currentExpiry = expiry.getTime();
 }
 
-function generateCode() {
-  // Generate random VM-XXXXXXXX code
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'VM-';
-  for (let i = 0; i < 8; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  currentCode = code;
-
-  updateExpiry();
-
+async function generateCode() {
   const plan = document.getElementById('cg-plan').value;
   const planNames = {
-    '7': 'STARTER — 7 Days',
-    '30': 'MONTHLY — 30 Days',
-    '90': 'PRO — 90 Days',
-    '180': 'ELITE — 180 Days',
-    'custom': 'CUSTOM'
+    '7': 'STARTER', '30': 'MONTHLY', '90': 'PRO', '180': 'ELITE', 'custom': 'CUSTOM'
   };
+  const days = plan === 'custom' ? (parseInt(document.getElementById('cg-custom').value) || 14) : parseInt(plan);
   const planLabel = planNames[plan] || 'CUSTOM';
-  const expiryDate = document.getElementById('cg-expiry').textContent;
-  const snippet = `  '${code}': ${currentExpiry}, // ${planLabel} — EXPIRES ${expiryDate}`;
 
-  document.getElementById('cg-code-display').textContent = code;
-  document.getElementById('cg-plan-display').textContent = `// ${planLabel} — EXPIRES ${expiryDate}`;
-  document.getElementById('cg-snippet').textContent = snippet;
-  document.getElementById('cg-output').style.display = 'block';
+  const btn = document.querySelector('[onclick="generateCode()"]');
+  if (btn) { btn.textContent = '⏳ SAVING TO DB...'; btn.disabled = true; }
 
-  // Add to log
-  addToLog(code, planLabel, expiryDate, currentExpiry);
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/generate-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ plan: planLabel, days })
+    });
+    const data = await res.json();
+
+    if (!data.success) { showToast('// ERROR: ' + (data.error || 'Failed'), true); return; }
+
+    currentCode = data.code;
+    currentExpiry = (data.expires_at || 0) * 1000;
+    const expiryDate = new Date(currentExpiry).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+
+    updateExpiry();
+    document.getElementById('cg-code-display').textContent = data.code;
+    document.getElementById('cg-plan-display').textContent = `// ${planLabel} — EXPIRES ${expiryDate}`;
+    document.getElementById('cg-snippet').textContent = `Code saved to Turso DB: ${data.code}`;
+    document.getElementById('cg-output').style.display = 'block';
+
+    addToLog(data.code, planLabel, expiryDate, currentExpiry);
+    showToast('✓ CODE SAVED TO DATABASE');
+    loadLiveCodes();
+  } catch (e) {
+    showToast('// NETWORK ERROR', true);
+  } finally {
+    if (btn) { btn.textContent = '⚡ GENERATE CODE'; btn.disabled = false; }
+  }
 }
 
 function addToLog(code, plan, expiry, ts) {
@@ -1586,6 +1657,26 @@ updateExpiry();
 document.getElementById('loginInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
+
+// Auto-login if valid token exists in session
+(async () => {
+  const t = getToken();
+  if (t) {
+    // Quick verify by fetching codes
+    try {
+      const res = await fetch(`${API_BASE}/vaultmarkets/admin/codes`, {
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+      if (res.ok) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        populateFields();
+        updateApiStatus();
+        loadLiveCodes();
+      }
+    } catch(e) {}
+  }
+})();
 </script>
 </body>
 </html>
