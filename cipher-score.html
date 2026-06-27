@@ -1056,7 +1056,7 @@ function runPoisson() {
 
   alerts.push({type:'blue', tag:'MATCH OUTCOME PROBS', msg:`Home Win: ${(homeWinProb*100).toFixed(1)}% | Draw: ${(drawProb*100).toFixed(1)}% | Away Win: ${(awayWinProb*100).toFixed(1)}%`});
 
-  if (homeXG + awayXG > 3) alerts.push({type:'yellow', tag:'HIGH SCORING EXPECTED', msg:`Combined xG of ${(homeXG+awayXG).toFixed(2)} suggests an open, goal-heavy game. Over 2.5 probability: ${(ou25*100).toFixed(1)}%`});
+  if (homeXG + awayXG > 2.6) alerts.push({type:'yellow', tag:'HIGH SCORING EXPECTED', msg:`Combined xG of ${(homeXG+awayXG).toFixed(2)} suggests an open, goal-heavy game. Over 2.5 probability: ${(ou25*100).toFixed(1)}%`});
   else alerts.push({type:'blue', tag:'LOW SCORING EXPECTED', msg:`Combined xG of ${(homeXG+awayXG).toFixed(2)} suggests a tight match. Under 2.5 looks likely.`});
 
   alerts.push({type:'green', tag:'TOP PREDICTION', msg:`Most probable scoreline: ${top5[0].score} at ${(top5[0].prob*100).toFixed(2)}% probability (fair odds: ${(1/top5[0].prob).toFixed(1)}x)`});
@@ -1125,7 +1125,7 @@ function scanValue() {
         <div class="pick-score" style="color:${col};text-shadow:0 0 10px ${col};">${r.score}</div>
         <div style="flex:1;">
           <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);">
-            Model: ${(r.prob*100).toFixed(2)}% | Bookie: ${(r.impliedProb*100).toFixed(2)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev.toFixed(3)}
+            Model: ${(r.prob*100).toFixed(2)}% | Bookie: ${(r.impliedProb*100).toFixed(2)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev.toFixed(2)}
           </div>
         </div>
         ${badge}
@@ -1136,12 +1136,12 @@ function scanValue() {
   if (valueFound.length > 0) {
     html += `<div class="verdict-box" style="color:#00ff6a;border-color:#00ff6a;box-shadow:0 0 20px rgba(0,255,106,0.1);margin-top:12px;">
       <div class="verdict-big">✓ ${valueFound.length} VALUE BET${valueFound.length > 1 ? 'S' : ''} FOUND</div>
-      <div class="verdict-sub">Bookmaker odds appear mispriced. Math suggests edge exists. Always verify with multiple sources.</div>
+      <div class="verdict-sub">Bookmaker odds appear mispriced. Compare across Bet9ja, 1xBet, Betway, and Sportybet before placing — one bookmaker's price may be an outlier.</div>
     </div>`;
   } else {
     html += `<div class="verdict-box" style="color:#ff2d55;border-color:#ff2d55;margin-top:12px;">
       <div class="verdict-big">NO VALUE DETECTED</div>
-      <div class="verdict-sub">Bookmaker odds appear to reflect true probabilities or are overpriced. Skip this market.</div>
+      <div class="verdict-sub">Bookmaker odds reflect true probabilities or are overpriced. Try different bookmakers for better pricing.</div>
     </div>`;
   }
 
@@ -1407,5 +1407,57 @@ function showAlerts(id, alerts) {
   `).join('');
 }
 </script>
+
+<!-- GUIDE SECTION -->
+<div style="background:#010a06;border:1px solid rgba(0,255,106,0.1);padding:20px;margin:16px;font-family:'Share Tech Mono',monospace;">
+  <div style="font-size:0.7rem;color:#00ff6a;letter-spacing:0.2em;margin-bottom:16px;">// HOW TO USE CIPHER SCORE</div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">⚽ PRE-MATCH PREDICTOR</div>
+    <div style="font-size:0.6rem;color:#2a5a3a;line-height:1.9;">
+      <b style="color:#888;">Goals Scored/Game</b> — Average goals the team scores per match over last 5 games. Find on Sofascore, FBref, or Soccerway.<br>
+      <b style="color:#888;">Goals Conceded/Game</b> — Average goals allowed per match. Lower = stronger defence.<br>
+      <b style="color:#888;">League Avg Goals/Game</b> — Average total goals per match in that league. EPL ≈ 2.7, La Liga ≈ 2.5, NPFL ≈ 2.2.<br>
+      <b style="color:#888;">Venue Adjustment</b> — Home Advantage adds ~10% boost. Use Strong Home Record for teams like Man City, Real Madrid at home.<br><br>
+      The model uses <b style="color:#aaa;">Poisson Distribution</b> — a mathematical formula that converts average goal rates into exact scoreline probabilities. It's the same method used by professional bookmakers.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">📊 READING THE HEATMAP</div>
+    <div style="font-size:0.6rem;color:#2a5a3a;line-height:1.9;">
+      Each cell shows the probability of that exact scoreline. <b style="color:#aaa;">Brighter green = more likely.</b><br>
+      Rows = Home goals. Columns = Away goals.<br>
+      The top 5 most probable scores are listed below with fair odds — compare these with bookmaker prices to find value.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">🎯 VALUE SCANNER</div>
+    <div style="font-size:0.6rem;color:#2a5a3a;line-height:1.9;">
+      Run Pre-Match Predictor first, then enter bookmaker odds for each scoreline.<br>
+      <b style="color:#888;">Edge %</b> — Positive means the bookmaker is underpricing that score. The bigger the edge, the better the value.<br>
+      <b style="color:#888;">EV</b> — Expected profit per unit staked. +0.15 = 15% return per bet long-term.<br>
+      ⚠ Always compare odds across multiple bookmakers before placing. One bookmaker may be an outlier.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">🔴 LIVE RECALCULATOR</div>
+    <div style="font-size:0.6rem;color:#2a5a3a;line-height:1.9;">
+      Use this during a live match to update probabilities based on current score and time.<br>
+      <b style="color:#888;">Home/Away xG</b> — Copy from the Pre-Match Predictor results, or enter from Sofascore's live xG tracker.<br>
+      <b style="color:#888;">Minute</b> — Current match minute. The model scales remaining expected goals by time left.<br>
+      <b style="color:#888;">Comeback Probability</b> — Chance the losing team equalises or wins from current position. Use this to spot overreacted live odds.
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(0,255,106,0.1);padding-top:10px;">
+    <div style="font-size:0.55rem;color:#1a3a2a;line-height:1.8;">
+      ⚠ CIPHER SCORE uses Poisson Distribution modelling. Results depend on the accuracy of stats entered. Always use recent form data (last 5–10 matches). Football is unpredictable — no model guarantees outcomes. Bet responsibly.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
