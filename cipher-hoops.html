@@ -977,15 +977,29 @@ function runSpreadModel() {
     document.getElementById('win-right-pct').textContent = (t2WinAdj * 100).toFixed(0) + '%';
   }, 100);
 
-  // Total score probability ranges
-  const ranges = [
-    { label: 'Under ' + (total - 10), prob: 0.08 },
-    { label: (total - 10) + ' – ' + (total - 5), prob: 0.17 },
-    { label: (total - 5) + ' – ' + total, prob: 0.25 },
-    { label: total + ' – ' + (total + 5), prob: 0.25 },
-    { label: (total + 5) + ' – ' + (total + 10), prob: 0.15 },
-    { label: 'Over ' + (total + 10), prob: 0.10 },
+  // Dynamic total score probability ranges based on pace variance
+  const stdDev = Math.max(gamePace * 0.08, 6);
+  function normalProb(x, mean, sd) {
+    return Math.exp(-0.5 * Math.pow((x - mean) / sd, 2)) / (sd * Math.sqrt(2 * Math.PI));
+  }
+  const rangeBounds = [
+    [total - 20, total - 10],
+    [total - 10, total - 5],
+    [total - 5, total],
+    [total, total + 5],
+    [total + 5, total + 10],
+    [total + 10, total + 20]
   ];
+  const rawProbs = rangeBounds.map(([lo, hi]) => {
+    let p = 0;
+    for (let v = lo; v < hi; v++) p += normalProb(v, total, stdDev);
+    return p;
+  });
+  const probSum = rawProbs.reduce((a, b) => a + b, 0);
+  const ranges = rangeBounds.map(([lo, hi], i) => ({
+    label: i === 0 ? `Under ${total - 10}` : i === 5 ? `Over ${total + 10}` : `${lo} – ${hi}`,
+    prob: rawProbs[i] / probSum
+  }));
 
   const maxP = Math.max(...ranges.map(r => r.prob));
   document.getElementById('total-picks').innerHTML = ranges.map(r => {
@@ -1087,7 +1101,7 @@ function runLiveComeback() {
 
   document.getElementById('lv-proj-final').textContent = `${t1Projected}-${t2Projected}`;
   document.getElementById('lv-comeback').textContent = scoreDiff !== 0 ? (trailingProb * 100).toFixed(1) + '%' : 'TIED';
-  document.getElementById('lv-ou-result').textContent = ouAssess + ' ' + ouDiff.toFixed(1);
+  document.getElementById('lv-ou-result').textContent = ouAssess + ' (by ' + ouDiff.toFixed(0) + ' pts)';
   document.getElementById('lv-ou-result').style.color = ouAssess === 'OVER' ? 'var(--green)' : 'var(--neon2)';
 
   const alerts = [];
@@ -1295,7 +1309,7 @@ function runHoopsValue() {
       : `<span class="value-badge" style="color:#ff2d55;border-color:#ff2d5544;">NO EDGE</span>`;
 
     let detail = '';
-    if (r.model !== undefined && r.model !== null) detail = `Model: ${(r.model*100).toFixed(1)}% | Bookie: ${(r.implied*100).toFixed(1)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev?.toFixed(3)}`;
+    if (r.model !== undefined && r.model !== null) detail = `Model: ${(r.model*100).toFixed(1)}% | Bookie: ${(r.implied*100).toFixed(1)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev?.toFixed(2)}`;
     else if (r.isSpread) detail = `Model spread: ${spread > 0 ? '-' : '+'}${Math.abs(spread)} | Book: ${r.label} | Diff: ${r.spreadDiff.toFixed(1)} pts`;
     else if (r.isTotal) detail = `Model total: ${total} | Book: ${bookTotal} | Diff: ${Math.abs(r.totalDiff).toFixed(1)} pts`;
 
@@ -1312,7 +1326,7 @@ function runHoopsValue() {
   html += `
     <div class="verdict-box" style="color:${col};border-color:${col};box-shadow:0 0 20px ${col}18;margin-top:12px;">
       <div class="verdict-big">${valueFound.length > 0 ? `✓ ${valueFound.length} VALUE LINE${valueFound.length > 1 ? 'S' : ''} DETECTED` : 'NO VALUE DETECTED'}</div>
-      <div class="verdict-sub">${valueFound.length > 0 ? 'Bookmaker lines appear mispriced vs efficiency model. Verify with multiple sources before betting.' : 'Bookmaker lines appear fairly priced. No significant edge found.'}</div>
+      <div class="verdict-sub">${valueFound.length > 0 ? 'Bookmaker lines appear mispriced vs efficiency model. Compare across Bet9ja, 1xBet, Betway, and Sportybet before placing — one bookmaker may be an outlier.' : 'Bookmaker lines appear fairly priced. Try different bookmakers for better pricing.'}</div>
     </div>
   `;
 
@@ -1335,5 +1349,56 @@ document.getElementById('t2-name').addEventListener('input', function() {
   document.getElementById('t2-label').textContent = (this.value || 'Away Team').toUpperCase() + ' — OFFENSIVE & DEFENSIVE RATINGS';
 });
 </script>
+
+<!-- GUIDE SECTION -->
+<div style="background:#0a0500;border:1px solid rgba(255,106,0,0.15);padding:20px;margin:16px;font-family:'Share Tech Mono',monospace;">
+  <div style="font-size:0.7rem;color:#ff6a00;letter-spacing:0.2em;margin-bottom:16px;">// HOW TO USE CIPHER HOOPS</div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">🏀 SPREAD & TOTAL MODEL</div>
+    <div style="font-size:0.6rem;color:#3a2010;line-height:1.9;">
+      <b style="color:#888;">Offensive Rating (ORtg)</b> — Points scored per 100 possessions. Find on NBA.com, Basketball-Reference, or ESPN. Typical NBA range: 105–120.<br>
+      <b style="color:#888;">Defensive Rating (DRtg)</b> — Points allowed per 100 possessions. Lower = better defence. Typical range: 105–118.<br>
+      <b style="color:#888;">Pace</b> — Possessions per 48 minutes. Higher pace = more scoring opportunities. NBA average ≈ 98–102.<br>
+      <b style="color:#888;">Home/Away Record %</b> — Win percentage at home or away. e.g. if Lakers are 25-16 at home enter 61.<br>
+      <b style="color:#888;">League Averages</b> — Use the current season league average pace and ORtg for accurate calibration.
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">📊 READING THE RESULTS</div>
+    <div style="font-size:0.6rem;color:#3a2010;line-height:1.9;">
+      <b style="color:#888;">Projected Scores</b> — Model's estimate of final scores based on efficiency and pace.<br>
+      <b style="color:#888;">Spread</b> — Point difference between teams. Compare with bookmaker spread to find value. 3+ pt difference = potential edge.<br>
+      <b style="color:#888;">Total</b> — Combined projected points. Compare with bookmaker O/U line. 5+ pt difference = strong signal.<br>
+      <b style="color:#888;">Win Probability</b> — Likelihood of each team winning based on efficiency ratings and home record.
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">📡 LIVE COMEBACK</div>
+    <div style="font-size:0.6rem;color:#3a2010;line-height:1.9;">
+      Enter current score, quarter, and minutes remaining to get live win probabilities.<br>
+      <b style="color:#888;">Comeback Probability</b> — Chance the losing team wins from current position. Use to spot value in live markets.<br>
+      <b style="color:#888;">O/U Projection</b> — Model estimates remaining scoring based on ratings and time left. OVER/UNDER shows direction vs your bookmaker line.
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">📈 QUARTER MODEL</div>
+    <div style="font-size:0.6rem;color:#3a2010;line-height:1.9;">
+      Enter each team's average points per quarter (from recent games) to identify quarter-by-quarter patterns.<br>
+      <b style="color:#888;">Q3 Dominance</b> — Teams that consistently outscore in Q3 often control game momentum.<br>
+      <b style="color:#888;">First Half Total</b> — Use projected first half total to compare with bookmaker first half O/U lines.
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(255,106,0,0.15);padding-top:10px;">
+    <div style="font-size:0.55rem;color:#1a0800;line-height:1.8;">
+      ⚠ CIPHER HOOPS uses pace-adjusted efficiency ratings. Results depend on data quality — always use current season stats. Basketball is unpredictable. This is not betting advice. Gamble responsibly.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
