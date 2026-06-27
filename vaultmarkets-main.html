@@ -713,8 +713,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   updateTime();
   setInterval(updateTime, 30000);
-  buildTicker();
-  buildOdds();
+  (async () => {
+    await buildTicker();
+    await buildOdds();
+  })();
   setInterval(fluctuateOdds, 3000);
 });
 
