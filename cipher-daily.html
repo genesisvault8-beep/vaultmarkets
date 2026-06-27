@@ -344,7 +344,17 @@ h1 {
 <body>
 
 <h1>CIPHER DAILY</h1>
-<div class="sub">PICK ANALYZER · 25 SLE SYSTEM</div>
+<div class="sub">PICK ANALYZER · 25 UNIT SYSTEM</div>
+
+<!-- CURRENCY SELECTOR -->
+<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+  <div style="font-size:0.55rem;color:#444;letter-spacing:0.1em;width:100%;margin-bottom:4px;">CURRENCY</div>
+  <button class="sport-btn active" id="cur-NGN" onclick="setCurrency('NGN',this)" style="flex:1;padding:7px 4px;font-size:0.65rem;">🇳🇬 NGN</button>
+  <button class="sport-btn" id="cur-GHS" onclick="setCurrency('GHS',this)" style="flex:1;padding:7px 4px;font-size:0.65rem;">🇬🇭 GHS</button>
+  <button class="sport-btn" id="cur-KES" onclick="setCurrency('KES',this)" style="flex:1;padding:7px 4px;font-size:0.65rem;">🇰🇪 KES</button>
+  <button class="sport-btn" id="cur-ZAR" onclick="setCurrency('ZAR',this)" style="flex:1;padding:7px 4px;font-size:0.65rem;">🇿🇦 ZAR</button>
+  <button class="sport-btn" id="cur-USD" onclick="setCurrency('USD',this)" style="flex:1;padding:7px 4px;font-size:0.65rem;">🇺🇸 USD</button>
+</div>
 
 <!-- SPORT TOGGLE -->
 <div class="sport-toggle">
@@ -504,6 +514,9 @@ h1 {
 
 <script>
 let sport = 'tennis';
+let currency = 'NGN';
+const currencySymbols = { NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', USD:'$' };
+
 let picks = JSON.parse(localStorage.getItem('cipher_picks') || '[]');
 // Clear old picks from previous days
 const today = new Date().toDateString();
@@ -511,6 +524,13 @@ if (localStorage.getItem('cipher_date') !== today) {
   picks = [];
   localStorage.setItem('cipher_date', today);
   localStorage.setItem('cipher_picks', '[]');
+}
+
+function setCurrency(cur, el) {
+  currency = cur;
+  document.querySelectorAll('[id^="cur-"]').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderPicks();
 }
 
 function setSport(s, el) {
@@ -626,7 +646,7 @@ function analyze() {
   } else if (ev > 0 && edge > 0) {
     vClass = 'maybe';
     vWord = 'MARGINAL';
-    vReason = `Small edge of ${edge.toFixed(1)}%. Only bet if you're confident in your stats. EV: +${ev.toFixed(3)}.`;
+    vReason = `Small edge of ${edge.toFixed(1)}%. Only bet if you're confident in your stats. EV: +${ev.toFixed(2)}.`;
   } else {
     vClass = 'no';
     vWord = 'SKIP';
@@ -652,7 +672,7 @@ function analyze() {
       <div class="stat-label">EDGE</div>
     </div>
     <div class="stat-box">
-      <div class="stat-val ${evColor}">${ev >= 0 ? '+' : ''}${ev.toFixed(3)}</div>
+      <div class="stat-val ${evColor}">${ev >= 0 ? '+' : ''}${ev.toFixed(2)}</div>
       <div class="stat-label">EV</div>
     </div>
   `;
@@ -714,9 +734,10 @@ function renderPicks() {
   const profit = accaReturn - 25;
   const avgEdge = picks.reduce((a, p) => a + p.edge, 0) / picks.length;
 
-  document.getElementById('sum-stake').textContent = '25 SLE';
-  document.getElementById('sum-return').textContent = accaReturn + ' SLE';
-  document.getElementById('sum-profit').textContent = '+' + profit + ' SLE';
+  const sym = currencySymbols[currency] || currency;
+  document.getElementById('sum-stake').textContent = sym + '25';
+  document.getElementById('sum-return').textContent = sym + accaReturn;
+  document.getElementById('sum-profit').textContent = '+' + sym + profit;
   document.getElementById('sum-edge').textContent = (avgEdge > 0 ? '+' : '') + avgEdge.toFixed(1) + '%';
 
   const badge = document.getElementById('go-badge');
@@ -747,5 +768,52 @@ function clearPicks() {
 // Init
 renderPicks();
 </script>
+
+<!-- HOW TO USE GUIDE -->
+<div class="card" style="margin-top:16px;">
+  <div class="card-header">HOW TO USE THIS TOOL</div>
+
+  <div style="font-size:0.7rem;color:#888;line-height:1.8;margin-bottom:14px;">
+    CIPHER DAILY helps you find value bets by comparing your statistical model against the bookmaker's implied probability. It tells you when the odds are in your favour — and when to walk away.
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.65rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">🎾 TENNIS INPUTS</div>
+    <div style="font-size:0.65rem;color:#666;line-height:1.9;">
+      <b style="color:#aaa;">Serve Win %</b> — How often a player wins their service games. Find this on ATP/WTA stats pages or flashscore.com. Typical range: 60–75%.<br>
+      <b style="color:#aaa;">Return Win %</b> — How often they win when returning. Typical range: 30–45%. Higher = better returner.<br>
+      <b style="color:#aaa;">Surface</b> — Clay slows the game (helps returners), Grass speeds it up (helps servers). Always match the actual surface.<br>
+      <b style="color:#aaa;">Format</b> — Best of 3 (most ATP/WTA) or Best of 5 (Grand Slams). Bo5 reduces variance, favourites win more often.
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.65rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">🏀 BASKETBALL INPUTS</div>
+    <div style="font-size:0.65rem;color:#666;line-height:1.9;">
+      <b style="color:#aaa;">Offensive Rating</b> — Points scored per 100 possessions. Find on basketball-reference.com or NBA.com. Typical NBA range: 105–120.<br>
+      <b style="color:#aaa;">Defensive Rating</b> — Points allowed per 100 possessions. Lower = better defence.<br>
+      <b style="color:#aaa;">Home Court</b> — Home teams historically win ~60% of games. Always factor this in.
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <div style="font-size:0.65rem;color:#fff;letter-spacing:0.1em;margin-bottom:6px;">📊 READING THE RESULT</div>
+    <div style="font-size:0.65rem;color:#666;line-height:1.9;">
+      <b style="color:#00cc44;">MODEL PROB</b> — What our model thinks the real win probability is.<br>
+      <b style="color:#00cc44;">EDGE %</b> — How much better your odds are vs the bookie. Positive = value bet. Negative = bookie has the edge.<br>
+      <b style="color:#00cc44;">EV</b> — Expected Value per unit staked. +0.05 means you gain 5 units per 100 staked long-term.<br><br>
+      <b style="color:#00cc44;">BET IT</b> — Edge &gt;5% and positive EV. Strong signal.<br>
+      <b style="color:#ccaa00;">MARGINAL</b> — Small positive edge. Only bet if your stats are solid.<br>
+      <b style="color:#cc2200;">SKIP</b> — No edge. The bookie's price is fair or against you. Don't force it.
+    </div>
+  </div>
+
+  <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:4px;padding:10px;">
+    <div style="font-size:0.6rem;color:#555;line-height:1.8;">
+      ⚠ This tool is a mathematical model — not a crystal ball. Results depend on the quality of stats you enter. Always use recent form data (last 10–15 matches). Bet responsibly.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
