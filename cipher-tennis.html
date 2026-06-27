@@ -980,7 +980,7 @@ function runTennisModel() {
   const p1SecondWin = parseFloat(document.getElementById('p1-2nd-win').value) || 52;
   const p1BpSaved = parseFloat(document.getElementById('p1-bp-saved').value) || 62;
   const p2FirstIn = parseFloat(document.getElementById('p2-1st-in').value) || 60;
-  const p2FirstWin = parseFloat(document.getElementById('p2-2nd-win-label').value) || 70;
+  const p2FirstWin = parseFloat(document.getElementById('p2-1st-win').value) || 70;
   const p2SecondWin = parseFloat(document.getElementById('p2-2nd-win').value) || 48;
   const p2BpSaved = parseFloat(document.getElementById('p2-bp-saved').value) || 58;
   const format = document.getElementById('match-format').value;
@@ -1038,7 +1038,11 @@ function runTennisModel() {
   const p2WinProb = 1 - p1WinProb;
   lastP1WinProb = p1WinProb;
 
-  const goesDistance = picks.filter(p => p.score.includes(String(maxSets - 1))).reduce((s, p) => s + p.prob, 0);
+  const goesDistance = picks.filter(p => {
+    const parts = p.score.split('-');
+    const loserSets = Math.min(parseInt(parts[0]), parseInt(parts[1]));
+    return loserSets === setsNeeded - 1;
+  }).reduce((s, p) => s + p.prob, 0);
 
   // Show results
   document.getElementById('prematch-placeholder').style.display = 'none';
@@ -1159,13 +1163,17 @@ function runLiveMomentum() {
     remPicks.push({ score: `${p1Sets}-${p2Sets+1}`, prob: pSetB, winner: p2Name });
   }
 
-  // Simple likely outcomes
+  // Simple likely outcomes — capped to valid scores
+  const maxWin = setsNeeded;
   const outcomes = [
     { score: `${p1Sets + p1SetsNeeded}-${p2Sets}`, prob: Math.pow(pSetA, p1SetsNeeded), winner: p1Name },
-    { score: `${p1Sets + p1SetsNeeded}-${p2Sets + 1}`, prob: Math.pow(pSetA, p1SetsNeeded) * pSetB * 1.5, winner: p1Name },
+    { score: `${p1Sets + p1SetsNeeded}-${Math.min(p2Sets + 1, maxWin - 1)}`, prob: Math.pow(pSetA, p1SetsNeeded) * pSetB * 1.5, winner: p1Name },
     { score: `${p1Sets}-${p2Sets + p2SetsNeeded}`, prob: Math.pow(pSetB, p2SetsNeeded), winner: p2Name },
-    { score: `${p1Sets + 1}-${p2Sets + p2SetsNeeded}`, prob: Math.pow(pSetB, p2SetsNeeded) * pSetA * 1.5, winner: p2Name },
-  ];
+    { score: `${Math.min(p1Sets + 1, maxWin - 1)}-${p2Sets + p2SetsNeeded}`, prob: Math.pow(pSetB, p2SetsNeeded) * pSetA * 1.5, winner: p2Name },
+  ].filter(o => {
+    const parts = o.score.split('-').map(Number);
+    return Math.max(...parts) <= maxWin && !(parts[0] === maxWin && parts[1] === maxWin);
+  });
   outcomes.sort((a, b) => b.prob - a.prob);
   const top4 = outcomes.slice(0, 4);
   const totalProb = top4.reduce((s, p) => s + p.prob, 0);
@@ -1282,7 +1290,7 @@ function runValueScan() {
         <div style="font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:900;color:${col};min-width:44px;text-shadow:0 0 8px ${col};">${r.score}</div>
         <div style="flex:1;">
           <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);">
-            Model ${(r.prob*100).toFixed(1)}% | Bookie ${(r.impliedProb*100).toFixed(1)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev.toFixed(3)}
+            Model ${(r.prob*100).toFixed(1)}% | Bookie ${(r.impliedProb*100).toFixed(1)}% | EV: ${r.ev >= 0 ? '+' : ''}${r.ev.toFixed(2)}
           </div>
         </div>
         ${badge}
@@ -1295,8 +1303,8 @@ function runValueScan() {
     ? `✓ ${valueFound.length} VALUE BET${valueFound.length > 1 ? 'S' : ''} DETECTED`
     : 'NO VALUE DETECTED';
   const sub = valueFound.length > 0
-    ? 'Bookmaker odds appear mispriced vs model. Edge found — always confirm with multiple sources.'
-    : 'Bookmaker odds reflect or exceed true probabilities. No edge in these markets.';
+    ? 'Bookmaker odds appear mispriced vs model. Compare across Bet9ja, 1xBet, Betway, and Sportybet before placing — one bookmaker\'s price may be an outlier.'
+    : 'Bookmaker odds reflect or exceed true probabilities. No edge in these markets. Try different bookmakers for better pricing.';
 
   html += `<div class="verdict-box" style="color:${col};border-color:${col};box-shadow:0 0 20px ${col}18;margin-top:12px;">
     <div class="verdict-big">${verdict}</div>
@@ -1333,7 +1341,7 @@ function runServeAnalysis() {
     const pSetA = calcSetWinProb(p1Hold, p2Hold);
     const breakProb = ((1 - p1Hold) + (1 - p2Hold)) / 2 * 100;
 
-    const dominant = p1AdjServe > p2AdjServe ? 'P1 SERVES DOMINATE' : 'P2 SERVES DOMINATE';
+    const dominant = p1AdjServe > p2AdjServe ? 'P1 SERVES DOMINATE' : p2AdjServe > p1AdjServe ? 'P2 SERVES DOMINATE' : 'SERVES EVENLY MATCHED';
     const col = s === 'grass' ? '#e8ff00' : s === 'clay' ? '#ff6a00' : s === 'hard' ? '#00cfff' : '#bf00ff';
 
     html += `
@@ -1379,5 +1387,68 @@ document.getElementById('p2-name').addEventListener('input', function() {
   document.getElementById('p2-label').textContent = (this.value || 'Player B').toUpperCase() + ' — SERVE STATS';
 });
 </script>
+
+<!-- GUIDE SECTION -->
+<div style="background:#0a0a00;border:1px solid rgba(232,255,0,0.1);padding:20px;margin:16px;font-family:'Share Tech Mono',monospace;">
+  <div style="font-size:0.7rem;color:#e8ff00;letter-spacing:0.2em;margin-bottom:16px;">// HOW TO USE CIPHER TENNIS</div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">🎾 MATCH PREDICTOR</div>
+    <div style="font-size:0.6rem;color:#555;line-height:1.9;">
+      <b style="color:#888;">1st Serve % In</b> — How often the player lands their first serve. Find on ATP/WTA stats or flashscore.com. Typical: 55–68%.<br>
+      <b style="color:#888;">1st Serve Win %</b> — Points won when first serve lands. Typical: 68–80%.<br>
+      <b style="color:#888;">2nd Serve Win %</b> — Points won on second serve. Typical: 45–58%.<br>
+      <b style="color:#888;">Break Points Saved %</b> — How often they save break points under pressure. Typical: 55–70%.<br>
+      <b style="color:#888;">H2H %</b> — Enter P1's historical win rate vs P2. e.g. if Sinner won 3 of 5 meetings enter 60.<br>
+      <b style="color:#888;">Ranking Adjustment</b> — Select who is higher ranked. Adds a slight edge adjustment.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">📊 READING RESULTS</div>
+    <div style="font-size:0.6rem;color:#555;line-height:1.9;">
+      <b style="color:#888;">Win Probability</b> — Model's estimate of each player winning the match.<br>
+      <b style="color:#888;">Hold Prob</b> — Likelihood of winning their own service games. Higher = stronger server.<br>
+      <b style="color:#888;">3 Sets Prob</b> — Chance the match goes the full distance. High % = closely matched.<br>
+      <b style="color:#888;">Set Score Odds</b> — Fair odds for each scoreline based on model. Compare with bookmaker to find value.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">🎯 VALUE SCANNER</div>
+    <div style="font-size:0.6rem;color:#555;line-height:1.9;">
+      Run Match Predictor first, then enter bookmaker odds for each scoreline.<br>
+      <b style="color:#888;">Edge %</b> — How much better your odds are vs model probability. Positive = value.<br>
+      <b style="color:#888;">EV</b> — Expected profit per unit staked long-term. +0.10 = 10% return per bet.<br>
+      ⚠ Always compare odds across multiple bookmakers (Bet9ja, 1xBet, Betway, Sportybet) before placing. One bookmaker may be an outlier.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">📡 LIVE MOMENTUM</div>
+    <div style="font-size:0.6rem;color:#555;line-height:1.9;">
+      Enter the current match score and game score to get updated win probabilities.<br>
+      <b style="color:#888;">Comeback Probability</b> — Chance the trailing player wins from current position.<br>
+      Use this to spot value in live markets when bookmakers overreact to a set lead.
+    </div>
+  </div>
+
+  <div>
+    <div style="font-size:0.62rem;color:#fff;letter-spacing:0.1em;margin-bottom:8px;">🌍 SERVE ANALYSIS</div>
+    <div style="font-size:0.6rem;color:#555;line-height:1.9;">
+      See how both players' serve stats change across all 4 surfaces.<br>
+      <b style="color:#888;">Break Prob</b> — How likely either player is broken per service game. High % = entertaining, tight match.<br>
+      Use this before matches to understand which surface suits your pick.
+    </div>
+  </div>
+
+  <div style="margin-top:14px;border-top:1px solid rgba(232,255,0,0.1);padding-top:10px;">
+    <div style="font-size:0.55rem;color:#333;line-height:1.8;">
+      ⚠ CIPHER TENNIS is a mathematical model using serve & return statistics. Results depend on data quality. Always use recent form (last 10–15 matches). This is not betting advice. Gamble responsibly.
+    </div>
+  </div>
+</div>
+
 </body>
+</html>
 </html>
