@@ -505,6 +505,109 @@ nav {
 .ref-banner-btn { padding: 12px 22px; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); color: var(--green); font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-decoration: none; border-radius: 3px; transition: all 0.3s; white-space: nowrap; }
 .ref-banner-btn:hover { background: var(--green); color: #000; }
 
+/* ── BC.GAME PARTNER BANNER ── */
+.bcgame-banner {
+  background: linear-gradient(135deg, #0a0d05 0%, rgba(255,136,0,0.06) 100%);
+  border: 1px solid rgba(255,136,0,0.25);
+  border-radius: 4px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+.bcgame-banner::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--gold), var(--orange), transparent);
+}
+.bcgame-banner::after {
+  content:'';
+  position:absolute; right:-40px; top:-40px;
+  width:160px; height:160px;
+  background: radial-gradient(circle, rgba(255,136,0,0.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.bcg-left { display:flex; align-items:center; gap:16px; }
+.bcg-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 2px;
+  flex-shrink: 0;
+  text-shadow: 0 0 20px rgba(255,215,0,0.3);
+  line-height: 1;
+}
+.bcg-logo span { color: var(--orange); }
+.bcg-divider {
+  width: 1px; height: 40px;
+  background: rgba(255,136,0,0.2);
+  flex-shrink: 0;
+}
+.bcg-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--orange);
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.bcg-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.bcg-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  line-height: 1.6;
+  max-width: 420px;
+}
+.bcg-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.bcg-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--gold);
+  background: rgba(255,215,0,0.08);
+  border: 1px solid rgba(255,215,0,0.2);
+  padding: 3px 10px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.bcg-btn {
+  padding: 13px 24px;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: #000;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 0.3s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(255,136,0,0.2);
+}
+.bcg-btn:hover {
+  box-shadow: 0 4px 28px rgba(255,136,0,0.45);
+  transform: translateY(-1px);
+}
+@media(max-width:600px){
+  .bcg-divider { display:none; }
+  .bcg-right { align-items:flex-start; }
+  .bcg-logo { font-size:18px; }
+}
+
 /* ── FOOTER ── */
 .dash-footer {
   display: flex;
@@ -607,6 +710,24 @@ nav {
     </div>
     <a href="vaultmarkets-aviator.html" class="av-cta-btn">LAUNCH SIGNAL →</a>
   </div>
+
+  <!-- BC.GAME PARTNER BANNER -->
+  <div class="section-label">// RECOMMENDED PLATFORM</div>
+  <a class="bcgame-banner" href="https://bc.game/i-42z7oxh7s-n/" target="_blank" rel="noopener">
+    <div class="bcg-left">
+      <div class="bcg-logo">BC<span>.</span>GAME</div>
+      <div class="bcg-divider"></div>
+      <div>
+        <div class="bcg-tag">// PARTNER PLATFORM — CRYPTO SPORTSBOOK & CASINO</div>
+        <div class="bcg-title">BET WITH CRYPTO. WITHDRAW INSTANTLY.</div>
+        <div class="bcg-desc">Deposit USDT, BTC or ETH — bet on football, basketball, tennis & crash games. No bank blocks, no delays. Trusted across West Africa. Use our link for a 120% deposit bonus on signup.</div>
+      </div>
+    </div>
+    <div class="bcg-right">
+      <div class="bcg-badge">🎁 120% DEPOSIT BONUS</div>
+      <div class="bcg-btn">OPEN BC.GAME →</div>
+    </div>
+  </a>
 
   <!-- REFERRAL BANNER -->
   <div class="referral-banner">
