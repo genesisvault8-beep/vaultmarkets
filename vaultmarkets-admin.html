@@ -1176,6 +1176,7 @@ async function doLogin() {
       setToken(data.token);
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
+      await syncOddsConfigFromServer();
       populateFields();
       updateApiStatus();
       loadLiveCodes();
@@ -1403,9 +1404,21 @@ async function testApiKey() {
   }
 }
 
-function activateApi() {
+async function activateApi() {
   const key = getVal('apiKeyInput') || getVal('quickApiKey');
   if (!key) { showToast('// PASTE API KEY FIRST', true); return; }
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/odds-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ apiKey: key, useRealApi: true })
+    });
+    const data = await res.json();
+    if (!data.success) { showToast('// SERVER REJECTED ACTIVATION', true); return; }
+  } catch (e) {
+    showToast('// NETWORK ERROR — NOT ACTIVATED', true);
+    return;
+  }
   config.apiKey = key;
   config.useRealApi = true;
   saveConfig();
@@ -1413,11 +1426,32 @@ function activateApi() {
   showToast('⚡ LIVE ODDS ACTIVATED');
 }
 
-function deactivateApi() {
+async function deactivateApi() {
+  try {
+    await fetch(`${API_BASE}/vaultmarkets/admin/odds-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ useRealApi: false })
+    });
+  } catch (e) {}
   config.useRealApi = false;
   saveConfig();
   updateApiStatus();
   showToast('// SWITCHED TO SIMULATED DATA');
+}
+
+async function syncOddsConfigFromServer() {
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/odds-config`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      config.apiKey = data.apiKey || config.apiKey;
+      config.useRealApi = !!data.useRealApi;
+      saveConfig();
+    }
+  } catch (e) {}
 }
 
 function showTestResult(id, success, msg) {
