@@ -1341,7 +1341,7 @@ function saveAll() {
   showToast('✓ ALL SETTINGS SAVED');
 }
 
-function getVal(id) { const e = document.getElementById(id); return e ? e.value : ''; }
+function getVal(id) { const e = document.getElementById(id); return e ? e.value.trim() : ''; }
 function getCheck(id) { const e = document.getElementById(id); return e ? e.checked : false; }
 
 function syncToggle(key, val) {
