@@ -976,6 +976,18 @@ async function buildOdds() {
         <td><div class="odds-badge ${o.badge}">${o.label}</div></td>
     </tr>
   `).join('');
+  } catch (e) {
+    console.log('[VAULTMARKETS] buildOdds error:', e.message);
+    document.getElementById('oddsTable').innerHTML = oddsData.map((o, i) => `
+      <tr class="odds-row">
+        <td><div class="odds-league">${o.league}</div></td>
+        <td><div class="odds-match">${o.match}</div></td>
+        <td><div class="odds-time">${o.time}</div></td>
+        <td><div class="odds-val" id="odd${i}" data-base="${o.odds}">${o.odds.toFixed(2)}</div></td>
+        <td><div class="odds-badge ${o.badge}">${o.label}</div></td>
+    </tr>
+  `).join('');
+  }
 }
 
 function fluctuateOdds() {
