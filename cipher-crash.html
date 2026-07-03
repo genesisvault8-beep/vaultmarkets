@@ -759,6 +759,10 @@
             <button class="btn" onclick="scanPattern()">⚡ SCAN PATTERNS</button>
           </div>
 
+          <div style="margin-top:14px;background:rgba(255,230,0,0.05);border:1px solid rgba(255,230,0,0.2);border-radius:3px;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--yellow);letter-spacing:0.05em;line-height:1.8;">
+            ⚠ This scanner summarizes historical variance in a data sample you provide — it does not detect real manipulation and cannot predict future rounds. Crash games run on provably-fair RNG, where each round is mathematically independent of the last. To check for actual manipulation, use the Provably Fair Verifier tab instead.
+          </div>
+
           <div style="margin-top:16px;">
             <div class="card-title">// Live History Log</div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
@@ -1131,7 +1135,7 @@ function scanPattern() {
     { name:'STREAK DANGER LEVEL', val: streakRisk },
     { name:'VOLATILITY INDEX', val: volatility },
     { name:'HIGH MULTIPLIER RATE', val: hotStreak },
-    { name:'FAIRNESS ANOMALY', val: fairness },
+    { name:'SAMPLE DEVIATION', val: fairness },
   ];
 
   document.getElementById('pat-bars').innerHTML = barDefs.map(b => {
@@ -1152,9 +1156,9 @@ function scanPattern() {
   // Verdict
   const overall = Math.round((earlyBust + streakRisk + volatility) / 3);
   let vColor, vText, vSub;
-  if (overall >= 65) { vColor='#ff003c'; vText='⚠ HOSTILE PATTERN DETECTED'; vSub='High bust frequency and dangerous streaks. Reduce bet size or avoid session.'; }
-  else if (overall >= 35) { vColor='#ffe600'; vText='⚡ MODERATE RISK PATTERN'; vSub='Some dangerous patterns present. Stay disciplined with cashout targets.'; }
-  else { vColor='#00ff88'; vText='✓ RELATIVELY CLEAN PATTERN'; vSub='No extreme manipulation signals. Standard risk management still required.'; }
+  if (overall >= 65) { vColor='#ff003c'; vText='⚠ HIGH VOLATILITY SAMPLE'; vSub='This historical sample shows frequent early busts and long low-multiplier streaks. This describes the past only — it does not predict the next round. Reduce bet size and set a strict stop-loss.'; }
+  else if (overall >= 35) { vColor='#ffe600'; vText='⚡ MODERATE VOLATILITY SAMPLE'; vSub='Some elevated-risk indicators in this sample. Stay disciplined with cashout targets regardless — each round is independent.'; }
+  else { vColor='#00ff88'; vText='✓ LOWER VOLATILITY SAMPLE'; vSub='No statistical outliers in this sample. This does not mean future rounds are "due" for anything — standard risk management still required.'; }
 
   document.getElementById('pat-verdict').innerHTML = `
     <div class="verdict-box" style="color:${vColor};border-color:${vColor};box-shadow:0 0 20px ${vColor}22;margin-top:12px;">
