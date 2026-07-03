@@ -554,6 +554,7 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
     <button class="admin-tab" onclick="switchTab('features',this)">⚙️ FEATURES</button>
     <button class="admin-tab" onclick="switchTab('aviator',this)">✈️ AVIATOR</button>
     <button class="admin-tab" onclick="switchTab('sports',this)">⚽ SPORTS</button>
+    <button class="admin-tab" onclick="switchTab('predictions',this)">🔮 PREDICTIONS</button>
     <button class="admin-tab" onclick="switchTab('codes',this)">🎟️ CODES</button>
     <button class="admin-tab" onclick="switchTab('security',this)">🔒 SECURITY</button>
   </div>
@@ -960,6 +961,69 @@ input:checked + .toggle-slider::before { transform: translateX(22px); background
       </div>
     </div>
 
+    <!-- PREDICTIONS TAB -->
+    <div class="tab-panel" id="tab-predictions">
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">🔮</span> ADD MANUAL PREDICTION</div>
+
+        <div class="form-row">
+          <label class="form-label">// SPORT</label>
+          <select class="form-input" id="predSport" onchange="onPredSportChange()">
+            <option value="football">⚽ Football</option>
+            <option value="basketball">🏀 Basketball</option>
+            <option value="tennis">🎾 Tennis</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// LEAGUE / COMPETITION</label>
+          <input type="text" class="form-input" id="predLeague" placeholder="e.g. Premier League, NBA, ATP Wimbledon">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// HOME TEAM / PLAYER 1</label>
+          <input type="text" class="form-input" id="predHome" placeholder="e.g. Arsenal">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// AWAY TEAM / PLAYER 2</label>
+          <input type="text" class="form-input" id="predAway" placeholder="e.g. Chelsea">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// MATCH TIME</label>
+          <input type="text" class="form-input" id="predTime" placeholder="e.g. 03/07/2026 20:00">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// PREDICTED OUTCOME</label>
+          <select class="form-input" id="predOutcome"></select>
+        </div>
+
+        <div class="form-row" id="predProbRow">
+          <label class="form-label">// PROBABILITY % (home / draw / away)</label>
+          <div style="display:flex; gap:8px;">
+            <input type="number" class="form-input" id="predProbHome" placeholder="Home %" min="0" max="100">
+            <input type="number" class="form-input" id="predProbDraw" placeholder="Draw %" min="0" max="100">
+            <input type="number" class="form-input" id="predProbAway" placeholder="Away %" min="0" max="100">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">// PREDICTED COEFFICIENT / ODDS</label>
+          <input type="number" class="form-input" id="predCoef" placeholder="e.g. 1.95" step="0.01" min="1.01">
+        </div>
+
+        <button class="btn-primary" onclick="submitPrediction()">// ADD PREDICTION</button>
+        <div id="predResult" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-title"><span class="card-title-icon">📋</span> LIVE PREDICTIONS</div>
+        <div id="predictionsList">// LOADING...</div>
+      </div>
+    </div>
+
     <!-- CODES TAB -->
     <div class="tab-panel" id="tab-codes">
 
@@ -1209,6 +1273,106 @@ function switchTab(id, btn) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'predictions') {
+    onPredSportChange();
+    loadPredictions();
+  }
+}
+
+// ═══════════════════════════════
+// MANUAL PREDICTIONS
+// ═══════════════════════════════
+function onPredSportChange() {
+  const sport = getVal('predSport');
+  const outcomeSel = document.getElementById('predOutcome');
+  const drawInput = document.getElementById('predProbDraw');
+
+  if (sport === 'football') {
+    outcomeSel.innerHTML = `<option value="1">1 — Home Win</option><option value="X">X — Draw</option><option value="2">2 — Away Win</option>`;
+    drawInput.style.display = 'block';
+    drawInput.placeholder = 'Draw %';
+  } else {
+    outcomeSel.innerHTML = `<option value="1">1 — Home/Player 1 Win</option><option value="2">2 — Away/Player 2 Win</option>`;
+    drawInput.style.display = 'none';
+    drawInput.value = '';
+  }
+}
+
+async function submitPrediction() {
+  const body = {
+    sport: getVal('predSport'),
+    league: getVal('predLeague'),
+    home_team: getVal('predHome'),
+    away_team: getVal('predAway'),
+    match_time: getVal('predTime'),
+    pred_outcome: getVal('predOutcome'),
+    prob_home: parseInt(getVal('predProbHome')) || 0,
+    prob_draw: parseInt(getVal('predProbDraw')) || 0,
+    prob_away: parseInt(getVal('predProbAway')) || 0,
+    coefficient: parseFloat(getVal('predCoef')) || 0
+  };
+
+  if (!body.home_team || !body.away_team) {
+    document.getElementById('predResult').innerHTML = '<span style="color:var(--red)">// HOME AND AWAY REQUIRED</span>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/predictions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('predResult').innerHTML = '<span style="color:var(--green)">// PREDICTION ADDED</span>';
+      ['predHome','predAway','predTime','predProbHome','predProbDraw','predProbAway','predCoef'].forEach(id => setVal(id, ''));
+      loadPredictions();
+    } else {
+      document.getElementById('predResult').innerHTML = `<span style="color:var(--red)">// ${data.error || 'FAILED'}</span>`;
+    }
+  } catch (e) {
+    document.getElementById('predResult').innerHTML = '<span style="color:var(--red)">// NETWORK ERROR</span>';
+  }
+}
+
+async function loadPredictions() {
+  const listEl = document.getElementById('predictionsList');
+  try {
+    const res = await fetch(`${API_BASE}/vaultmarkets/admin/predictions`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    if (!data.success || !data.predictions.length) {
+      listEl.innerHTML = '// NO PREDICTIONS YET';
+      return;
+    }
+    const icon = { football: '⚽', basketball: '🏀', tennis: '🎾' };
+    listEl.innerHTML = data.predictions.map(p => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div>
+          <div style="font-weight:600;">${icon[p.sport] || ''} ${p.home_team} vs ${p.away_team}</div>
+          <div style="font-size:12px; opacity:0.6;">${p.league || ''} · ${p.match_time || ''} · Pred: ${p.pred_outcome} · Coef: ${p.coefficient}</div>
+        </div>
+        <button style="padding:4px 12px;background:transparent;border:1px solid rgba(255,51,85,0.4);color:var(--red);font-family:monospace;font-size:9px;cursor:pointer;" onclick="deletePrediction(${p.id})">DELETE</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    listEl.innerHTML = '// FAILED TO LOAD';
+  }
+}
+
+async function deletePrediction(id) {
+  if (!confirm('Delete this prediction?')) return;
+  try {
+    await fetch(`${API_BASE}/vaultmarkets/admin/predictions/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    loadPredictions();
+  } catch (e) {
+    alert('// DELETE FAILED');
+  }
 }
 
 // ═══════════════════════════════

@@ -343,6 +343,22 @@ nav {
   animation: blink 1.4s ease-in-out infinite;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.pred-tab {
+  background: transparent;
+  border: 1px solid rgba(0,245,196,0.25);
+  color: var(--muted, #8899a6);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.pred-tab.active {
+  background: rgba(0,245,196,0.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
 
 .odds-table { width: 100%; border-collapse: collapse; }
 .odds-row {
@@ -768,6 +784,24 @@ nav {
     <table class="odds-table" id="oddsTable"></table>
   </div>
 
+  <!-- MANUAL PREDICTIONS -->
+  <div class="section-label">// EXPERT PREDICTIONS</div>
+  <div class="odds-section">
+    <div class="odds-header">
+      <div class="odds-title">// TODAY'S PICKS</div>
+      <div class="odds-status">
+        <div class="live-dot"></div>
+        CURATED
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button class="pred-tab active" data-sport="football" onclick="switchPredSport('football',this)">⚽ FOOTBALL</button>
+      <button class="pred-tab" data-sport="basketball" onclick="switchPredSport('basketball',this)">🏀 BASKETBALL</button>
+      <button class="pred-tab" data-sport="tennis" onclick="switchPredSport('tennis',this)">🎾 TENNIS</button>
+    </div>
+    <table class="odds-table" id="predictionsTable"></table>
+  </div>
+
   <!-- TOOLS GRID -->
   <div class="section-label">// INTELLIGENCE TOOLS</div>
   <div class="tools-grid">
@@ -850,12 +884,56 @@ window.addEventListener('DOMContentLoaded', () => {
   (async () => {
     await buildTicker();
     await buildOdds();
+    await buildPredictions('football');
   })();
   setInterval(fluctuateOdds, 3000);
 
   revalidateSession();
   setInterval(revalidateSession, 15 * 60 * 1000); // re-check with backend every 15 min
 });
+
+// ── MANUAL PREDICTIONS (football / basketball / tennis) ──
+const VM_PREDICTIONS_URL = 'https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/predictions';
+
+async function buildPredictions(sport) {
+  const table = document.getElementById('predictionsTable');
+  table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// LOADING PICKS...</td></tr>`;
+
+  try {
+    const res = await fetch(`${VM_PREDICTIONS_URL}?sport=${sport}`);
+    const data = await res.json();
+    const picks = data.predictions || [];
+
+    if (!picks.length) {
+      table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// NO PICKS POSTED YET FOR THIS SPORT</td></tr>`;
+      return;
+    }
+
+    table.innerHTML = picks.map(p => {
+      const outcomeLabel = p.pred_outcome === 'X' ? 'DRAW' : (p.pred_outcome === '1' ? p.home_team : p.away_team);
+      const probLine = sport === 'football'
+        ? `${p.prob_home}% / ${p.prob_draw}% / ${p.prob_away}%`
+        : `${p.prob_home}% / ${p.prob_away}%`;
+      return `
+        <tr class="odds-row">
+          <td><div class="odds-league">${p.league || ''}</div></td>
+          <td><div class="odds-match">${p.home_team} vs ${p.away_team}</div></td>
+          <td><div class="odds-time">${p.match_time || ''}</div></td>
+          <td><div class="odds-val">${p.coefficient ? Number(p.coefficient).toFixed(2) : '-'}</div></td>
+          <td><div class="odds-badge badge-value">${outcomeLabel} (${probLine})</div></td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// FAILED TO LOAD PICKS</td></tr>`;
+  }
+}
+
+function switchPredSport(sport, btn) {
+  document.querySelectorAll('.pred-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  buildPredictions(sport);
+}
 
 // ── SESSION RE-VALIDATION (catches revoked codes + spoofed local expiry) ──
 const VM_BACKEND_URL = 'https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/validate';
