@@ -414,6 +414,7 @@ async function unlock() {
     localStorage.setItem(CODE_KEY, code);
     localStorage.setItem('vm_plan', data.plan || 'STARTER');
     localStorage.setItem('vm_access_time', Date.now().toString());
+    localStorage.setItem('vm_expires_at', (data.expires_at || 0).toString());
 
     // Redirect
     setTimeout(() => {
@@ -434,9 +435,22 @@ function getRedirectTarget() {
   return params.get('redirect') || 'vaultmarkets-main.html';
 }
 
-// Auto-redirect if already has valid session
+// Auto-redirect if already has valid, unexpired session
 window.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem(SESSION_KEY) === 'true') {
+  const hasSession = localStorage.getItem(SESSION_KEY) === 'true';
+  const expiresAt = parseInt(localStorage.getItem('vm_expires_at'));
+  const expired = expiresAt && Date.now() > expiresAt * 1000;
+
+  if (hasSession && expired) {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(CODE_KEY);
+    localStorage.removeItem('vm_plan');
+    localStorage.removeItem('vm_access_time');
+    localStorage.removeItem('vm_expires_at');
+    return;
+  }
+
+  if (hasSession) {
     window.location.href = getRedirectTarget();
   }
 });
