@@ -343,6 +343,85 @@ nav {
   animation: blink 1.4s ease-in-out infinite;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── MARKET PULSE ── */
+.pulse-strip {
+  background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(0,255,136,0.03));
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+.pulse-wave {
+  width: 120px;
+  height: 40px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+.pulse-wave svg { width: 100%; height: 100%; }
+.pulse-wave path {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px var(--green));
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: pulseDraw 2.6s linear infinite;
+}
+@keyframes pulseDraw {
+  0% { stroke-dashoffset: 300; }
+  60% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -300; }
+}
+.pulse-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.pulse-stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.pulse-stat-key {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+.pulse-stat-wide .pulse-top-pick {
+  font-size: 13px;
+  color: var(--cyan);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+}
+.pulse-cta {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--cyan);
+  border: 1px solid rgba(0,229,255,0.3);
+  padding: 8px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pulse-cta:hover { background: rgba(0,229,255,0.1); }
+@media(max-width:600px){
+  .pulse-strip { flex-direction: column; align-items: flex-start; }
+  .pulse-wave { width: 100%; }
+}
 .pred-tab {
   background: transparent;
   border: 1px solid rgba(0,245,196,0.25);
@@ -771,21 +850,33 @@ nav {
     <a href="vaultmarkets-referral.html" class="ref-banner-btn">GET MY LINK →</a>
   </div>
 
-  <!-- LIVE ODDS -->
-  <div class="section-label">// LIVE ODDS FEED</div>
-  <div class="odds-section">
-    <div class="odds-header">
-      <div class="odds-title">// TODAY'S MARKETS</div>
-      <div class="odds-status">
-        <div class="live-dot"></div>
-        SIMULATED DATA
+  <!-- MARKET PULSE -->
+  <div class="section-label">// MARKET PULSE</div>
+  <div class="pulse-strip">
+    <div class="pulse-wave">
+      <svg viewBox="0 0 300 60" preserveAspectRatio="none">
+        <path id="pulseLine" d="M0,30 L60,30 L75,10 L90,50 L105,30 L300,30" />
+      </svg>
+    </div>
+    <div class="pulse-stats">
+      <div class="pulse-stat">
+        <div class="pulse-stat-val" id="pulsePicks">—</div>
+        <div class="pulse-stat-key">PICKS LIVE TODAY</div>
+      </div>
+      <div class="pulse-stat">
+        <div class="pulse-stat-val" id="pulseSports">—</div>
+        <div class="pulse-stat-key">SPORTS TRACKED</div>
+      </div>
+      <div class="pulse-stat pulse-stat-wide">
+        <div class="pulse-stat-key">TOP EDGE PICK</div>
+        <div class="pulse-stat-val pulse-top-pick" id="pulseTopPick">—</div>
       </div>
     </div>
-    <table class="odds-table" id="oddsTable"></table>
+    <a href="#predictions-section" class="pulse-cta" onclick="document.getElementById('predictions-section').scrollIntoView({behavior:'smooth'})">VIEW ALL PICKS ↓</a>
   </div>
 
   <!-- MANUAL PREDICTIONS -->
-  <div class="section-label">// EXPERT PREDICTIONS</div>
+  <div class="section-label" id="predictions-section">// EXPERT PREDICTIONS</div>
   <div class="odds-section">
     <div class="odds-header">
       <div class="odds-title">// TODAY'S PICKS</div>
@@ -887,10 +978,9 @@ window.addEventListener('DOMContentLoaded', () => {
   setInterval(updateTime, 30000);
   (async () => {
     await buildTicker();
-    await buildOdds();
+    await buildMarketPulse();
     await buildPredictions('football');
   })();
-  setInterval(fluctuateOdds, 3000);
 
   revalidateSession();
   setInterval(revalidateSession, 15 * 60 * 1000); // re-check with backend every 15 min
@@ -1031,59 +1121,32 @@ async function buildTicker() {
   }
 }
 
-// ── ODDS TABLE ──
-const oddsData = [
-  {league:'EPL', match:'Arsenal vs Chelsea', time:'20:00', odds:2.10, badge:'badge-hot', label:'🔥 HOT'},
-  {league:'UCL', match:'Real Madrid vs Bayern', time:'21:00', odds:2.40, badge:'badge-hot', label:'🔥 HOT'},
-  {league:'LALIGA', match:'Barcelona vs Atletico', time:'19:00', odds:1.95, badge:'badge-value', label:'⚡ VALUE'},
-  {league:'NBA', match:'Lakers vs Celtics', time:'01:30', odds:1.85, badge:'badge-value', label:'⚡ VALUE'},
-  {league:'ATP', match:'Djokovic vs Alcaraz', time:'14:00', odds:1.90, badge:'badge-value', label:'⚡ VALUE'},
-  {league:'SERIE A', match:'Juventus vs AC Milan', time:'19:45', odds:2.50, badge:'badge-warm', label:'— WARM'},
-  {league:'NBA', match:'Warriors vs Bucks', time:'00:00', odds:1.65, badge:'badge-warm', label:'— WARM'},
-  {league:'EPL', match:'Man City vs Liverpool', time:'17:30', odds:2.20, badge:'badge-hot', label:'🔥 HOT'},
-];
-
-async function buildOdds() {
+// ── MARKET PULSE (real counts from predictions data) ──
+async function buildMarketPulse() {
+  const icon = { football: '⚽', basketball: '🏀', tennis: '🎾' };
   try {
-    const res = await fetch('https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/live-odds');
+    const res = await fetch(`${VM_PREDICTIONS_URL}`);
     const data = await res.json();
-    const odds = data.odds || oddsData; // Fallback to hardcoded if API fails
-    
-    document.getElementById('oddsTable').innerHTML = odds.map((o, i) => `
-      <tr class="odds-row">
-        <td><div class="odds-league">${o.league}</div></td>
-        <td><div class="odds-match">${o.match}</div></td>
-        <td><div class="odds-time">${o.time}</div></td>
-        <td><div class="odds-val" id="odd${i}" data-base="${o.odds}">${o.odds.toFixed(2)}</div></td>
-        <td><div class="odds-badge ${o.badge}">${o.label}</div></td>
-    </tr>
-  `).join('');
-  } catch (e) {
-    console.log('[VAULTMARKETS] buildOdds error:', e.message);
-    document.getElementById('oddsTable').innerHTML = oddsData.map((o, i) => `
-      <tr class="odds-row">
-        <td><div class="odds-league">${o.league}</div></td>
-        <td><div class="odds-match">${o.match}</div></td>
-        <td><div class="odds-time">${o.time}</div></td>
-        <td><div class="odds-val" id="odd${i}" data-base="${o.odds}">${o.odds.toFixed(2)}</div></td>
-        <td><div class="odds-badge ${o.badge}">${o.label}</div></td>
-    </tr>
-  `).join('');
-  }
-}
+    const picks = data.predictions || [];
 
-function fluctuateOdds() {
-  oddsData.forEach((o, i) => {
-    if (Math.random() < 0.25) {
-      const el = document.getElementById('odd' + i);
-      if (!el) return;
-      const change = (Math.random() - 0.5) * 0.06;
-      const newVal = Math.max(1.01, +(o.odds + change).toFixed(2));
-      el.textContent = newVal.toFixed(2);
-      el.style.color = newVal > o.odds ? 'var(--green)' : 'var(--red)';
-      setTimeout(() => el.style.color = '#fff', 800);
+    document.getElementById('pulsePicks').textContent = picks.length;
+
+    const sportsSeen = [...new Set(picks.map(p => p.sport))];
+    document.getElementById('pulseSports').textContent = sportsSeen.length || '0';
+
+    if (picks.length) {
+      const top = picks.reduce((best, p) =>
+        (parseFloat(p.coefficient) || 0) > (parseFloat(best.coefficient) || 0) ? p : best, picks[0]);
+      const topLabel = `${icon[top.sport] || ''} ${top.home_team} vs ${top.away_team} · ${Number(top.coefficient).toFixed(2)}x`;
+      document.getElementById('pulseTopPick').textContent = topLabel;
+    } else {
+      document.getElementById('pulseTopPick').textContent = 'No picks posted yet';
     }
-  });
+  } catch (e) {
+    document.getElementById('pulsePicks').textContent = '0';
+    document.getElementById('pulseSports').textContent = '0';
+    document.getElementById('pulseTopPick').textContent = 'Unable to load';
+  }
 }
 </script>
 </body>
