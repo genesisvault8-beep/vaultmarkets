@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools Guide — VaultMarkets</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --bg2: #070d18;
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --yellow: #ffe600;
+  --red: #ff3355;
+  --border: rgba(255,255,255,0.08);
+  --muted: #5a7a90;
+  --text: #c8d6e0;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+.top-bar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.nav-logo {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+.nav-logo span { color: var(--cyan); }
+.top-links { display: flex; gap: 14px; align-items: center; }
+.back-link, .pdf-link {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+.back-link { color: var(--muted); }
+.back-link:hover { color: var(--cyan); }
+.pdf-link {
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.3);
+  padding: 8px 14px;
+  border-radius: 4px;
+}
+.pdf-link:hover { background: rgba(0,255,136,0.1); }
+
+.wrap { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+
+h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.subtitle {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+
+.jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 32px;
+  padding: 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.jump-nav a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.jump-nav a:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.tool-section {
+  margin-bottom: 40px;
+  padding: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  scroll-margin-top: 70px;
+}
+.tool-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.tool-icon { font-size: 24px; }
+.tool-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 17px;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.tool-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  margin: 6px 0 14px;
+}
+h3 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 1.5px;
+  margin: 18px 0 8px;
+}
+p, li { font-size: 14px; color: var(--text); }
+ol, ul { padding-left: 20px; margin: 6px 0; }
+li { margin-bottom: 5px; }
+.caveat-box {
+  margin-top: 14px;
+  background: rgba(255,230,0,0.06);
+  border: 1px solid rgba(255,230,0,0.25);
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11.5px;
+  color: var(--yellow);
+  line-height: 1.7;
+}
+.footer-note {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="nav-logo">VAULT<span>MARKETS</span></div>
+  <div class="top-links">
+    <a href="vaultmarkets-guide.pdf" class="pdf-link" download>📥 DOWNLOAD PDF</a>
+    <a href="vaultmarkets-main.html" class="back-link">← BACK TO PLATFORM</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>Tools Guide</h1>
+  <div class="subtitle">// HOW TO USE EVERY VAULTMARKETS TOOL — JULY 2026</div>
+
+  <p>Every tool here does one job: turn raw stats into a clearer picture before you decide anything. None of them predict outcomes with certainty — sport is not that kind of problem. Read the caveat on each tool; it tells you exactly what the numbers can and can't do for you.</p>
+
+  <div class="jump-nav">
+    <a href="#aviator">✈️ Aviator Signal</a>
+    <a href="#crash">🚀 Cipher Crash</a>
+    <a href="#score">⚽ Cipher Score</a>
+    <a href="#hoops">🏀 Cipher Hoops</a>
+    <a href="#tennis">🎾 Cipher Tennis</a>
+    <a href="#daily">📅 Cipher Daily</a>
+    <a href="#betsmart">📊 BetSmart</a>
+    <a href="#bettruth">📐 BetTruth</a>
+  </div>
+
+  <!-- AVIATOR SIGNAL -->
+  <div class="tool-section" id="aviator">
+    <div class="tool-header"><span class="tool-icon">✈️</span><span class="tool-name">Aviator Signal</span></div>
+    <div class="tool-tag">// CRASH INTELLIGENCE ENGINE</div>
+    <p>Analyses your last 5 crash-game rounds and surfaces statistical patterns — streaks, momentum shifts, and volatility — to help you plan a cashout approach for your current session.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li>Enter your last 5 crash multipliers into R1–R5 (R1 = oldest, R5 = most recent). Minimum 3 rounds needed.</li>
+      <li>Tap ANALYZE PATTERN.</li>
+      <li>Read the signal: <b>HOLD HIGHER</b>, <b>CASH EARLY</b>, or <b>PLAY SAFE</b>, along with a target multiplier and a confidence level.</li>
+      <li>Check AVG MULT, TREND, and VOLATILITY for the session's shape at a glance.</li>
+    </ol>
+    <h3>// READING THE SIGNAL</h3>
+    <ul>
+      <li><b>HIGH confidence</b> means the pattern in your entered data is clear; <b>LOW</b> means the data is mixed.</li>
+      <li><b>Volatility</b>: LOW = consistent rounds, HIGH = unpredictable swings.</li>
+    </ul>
+    <div class="caveat-box">⚠ Aviator runs on provably-fair RNG — each round is mathematically independent of the last. This tool describes your session's statistical shape only. It does not and cannot predict the next round's outcome.</div>
+  </div>
+
+  <!-- CIPHER CRASH -->
+  <div class="tool-section" id="crash">
+    <div class="tool-header"><span class="tool-icon">🚀</span><span class="tool-name">Cipher Crash</span></div>
+    <div class="tool-tag">// FAIRNESS VERIFIER + HISTORY SCANNER</div>
+    <p>Two separate tools in one page — don't mix them up, they answer different questions.</p>
+    <h3>// TOOL 1: PROVABLY FAIR VERIFIER</h3>
+    <p>Checks whether a specific crash round's result matches its cryptographic seed — this is the real manipulation check.</p>
+    <ol>
+      <li>Get the server seed, client seed, and nonce from your crash platform (usually under "provably fair" or "fairness" in their settings).</li>
+      <li>Enter them, plus the claimed result multiplier.</li>
+      <li>Tap VERIFY PROVABLY FAIR.</li>
+      <li>A hash mismatch doesn't always mean cheating — different platforms use different formulas. Use the platform's own official verifier for a conclusive result.</li>
+    </ol>
+    <h3>// TOOL 2: PATTERN SCANNER</h3>
+    <p>Paste in a list of past crash results to see historical volatility stats — average crash point, streak lengths, how often rounds busted early.</p>
+    <div class="caveat-box">⚠ The Pattern Scanner summarizes history you provide — it does not detect real manipulation and cannot predict future rounds. For an actual fairness check, use the Provably Fair Verifier above, not the scanner.</div>
+  </div>
+
+  <!-- CIPHER SCORE -->
+  <div class="tool-section" id="score">
+    <div class="tool-header"><span class="tool-icon">⚽</span><span class="tool-name">Cipher Score</span></div>
+    <div class="tool-tag">// FOOTBALL — POISSON DISTRIBUTION ENGINE</div>
+    <p>Models a football match using both teams' scoring history to produce a probability spread across likely scorelines — not a single predicted score.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li>Enter each team's Goals Scored/Game, Goals Conceded/Game, League Avg Goals/Game, and Venue.</li>
+      <li>View the <b>Score Probability Heatmap</b> and <b>Top 5 Predicted Scorelines</b> — each with its own probability %, not a single "correct" answer.</li>
+      <li>Optional — <b>Team Metrics</b>: rate each side 0–10 on Attack, Defense, Form, Possession, Finishing, and Discipline for a visual radar comparison.</li>
+      <li>Optional — <b>Bookmaker Odds Input</b>: enter the odds you're being offered to see <b>Value Intelligence</b> — where the model's probability diverges from the bookmaker's implied probability.</li>
+    </ol>
+    <h3>// LIVE MODE</h3>
+    <p>Once the match has kicked off, switch to <b>Live Match State</b>: enter the live score, minute, and pre-match xG for updated in-play intelligence.</p>
+    <div class="caveat-box">⚠ This is mathematical modeling based on historical scoring rates, not a crystal ball. Football has real-world variance — injuries, red cards, and refereeing decisions — that no goals-per-game average captures.</div>
+  </div>
+
+  <!-- CIPHER HOOPS -->
+  <div class="tool-section" id="hoops">
+    <div class="tool-header"><span class="tool-icon">🏀</span><span class="tool-name">Cipher Hoops</span></div>
+    <div class="tool-tag">// BASKETBALL — PACE & EFFICIENCY ENGINE</div>
+    <p>Uses each team's offensive/defensive efficiency and pace to project how a game is likely to play out.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li>Enter each team's Offensive Rating, Defensive Rating, Pace, and Home/Away Record %.</li>
+      <li>View the <b>Game Projection</b>.</li>
+      <li>Optional — <b>Quarter Scoring Profile</b>: enter each team's typical Q1–Q4 scoring split for <b>Quarter Intelligence</b> (which quarters tend to favor which side).</li>
+      <li>Optional — <b>Bookmaker Lines Input</b>: enter the spread/total you're offered to see <b>Value Intelligence</b>.</li>
+    </ol>
+    <h3>// LIVE MODE</h3>
+    <p>Switch to <b>Live Game State</b> once the game is underway: enter the live score, quarter, minutes remaining, and O/U line for updated in-play intelligence.</p>
+    <div class="caveat-box">⚠ Pace and efficiency ratings are season averages — a single game can swing hard from a team's normal profile due to injuries, rest, or foul trouble. Treat the projection as a baseline, not a forecast.</div>
+  </div>
+
+  <!-- CIPHER TENNIS -->
+  <div class="tool-section" id="tennis">
+    <div class="tool-header"><span class="tool-icon">🎾</span><span class="tool-name">Cipher Tennis</span></div>
+    <div class="tool-tag">// SERVE & RETURN MODEL</div>
+    <p>Simulates a match using each player's serve and return statistics, adjusted for surface and format.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li>Enter each player's 1st Serve % In, 1st Serve Win %, 2nd Serve Win %, and Break Points Saved %.</li>
+      <li>Set the Format (best of 3/5), Surface, H2H Win Rate, and Ranking Advantage.</li>
+      <li>View the <b>Match Simulation Results</b>.</li>
+      <li>Optional — <b>Surface Impact Analysis</b> and <b>Surface Comparison</b>: see how each player's serve/return numbers typically shift by surface (hard/clay/grass).</li>
+      <li>Optional — <b>Bookmaker Odds Input</b> for <b>Value Intelligence</b>.</li>
+    </ol>
+    <h3>// LIVE MODE</h3>
+    <p>Switch to <b>Live Match State</b> mid-match: enter sets, games, who's serving, and hold probabilities for updated in-play intelligence.</p>
+    <div class="caveat-box">⚠ Tennis is one of the most momentum-driven sports — a single break of serve can flip win probability fast. Serve/return averages are a starting point, not the full picture of a live match.</div>
+  </div>
+
+  <!-- CIPHER DAILY -->
+  <div class="tool-section" id="daily">
+    <div class="tool-header"><span class="tool-icon">📅</span><span class="tool-name">Cipher Daily</span></div>
+    <div class="tool-tag">// QUICK DAILY PICK CALCULATOR</div>
+    <p>A faster, single-page version of the sport-specific tools — for when you want a quick probability read without the full multi-card setup.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li>Enter the two players/teams.</li>
+      <li>Fill in the relevant stats for the sport (serve % for tennis, offensive/defensive rating for basketball).</li>
+      <li>Choose Surface/Format or Home Court where relevant.</li>
+      <li>Select which side you're considering betting on and enter the bookmaker odds offered.</li>
+      <li>Get a quick probability and value read.</li>
+    </ol>
+    <div class="caveat-box">⚠ This is a simplified, faster version of Cipher Score/Hoops/Tennis. For a deeper breakdown of any single match, use the dedicated sport tool instead.</div>
+  </div>
+
+  <!-- BETSMART -->
+  <div class="tool-section" id="betsmart">
+    <div class="tool-header"><span class="tool-icon">📊</span><span class="tool-name">BetSmart</span></div>
+    <div class="tool-tag">// BANKROLL & STAKING TRACKER</div>
+    <p>Tracks your actual betting activity over time and helps size your stakes — this tool is about discipline and record-keeping, not predicting matches.</p>
+    <h3>// HOW TO USE</h3>
+    <ol>
+      <li><b>Add Bet</b>: log each bet's description, stake, decimal odds, sport, and outcome (win/loss/pending) as you place it.</li>
+      <li><b>Smart Stake Calculator</b>: enter your own honestly-estimated win probability % and the decimal odds offered to get a suggested stake size relative to your bankroll.</li>
+      <li><b>Odds Converter</b>: quickly convert decimal odds to other formats.</li>
+      <li>Review <b>Bankroll History</b> (your balance over time) and <b>By Sport</b> (which sports you actually perform well or badly in).</li>
+    </ol>
+    <div class="caveat-box">⚠ The Smart Stake Calculator is only as good as the win probability you type in — if you guess optimistically, the suggested stake will be too. Log every bet honestly, including losses, or the tracker can't tell you anything useful.</div>
+  </div>
+
+  <!-- BETTRUTH -->
+  <div class="tool-section" id="bettruth">
+    <div class="tool-header"><span class="tool-icon">📐</span><span class="tool-name">BetTruth</span></div>
+    <div class="tool-tag">// FINANCIAL LITERACY & ODDS MATH</div>
+    <p>This is the most important tool on the platform if you bet regularly. It's not built to help you win more — it's built to show you the real math behind betting, which most platforms don't explain.</p>
+    <h3>// WHAT'S INSIDE</h3>
+    <ul>
+      <li><b>Odds Converter & True Probability</b> — see what any odds actually imply as a win chance.</li>
+      <li><b>Bookmaker Margin Detector</b> — enter a market's odds to see the bookmaker's built-in edge (overround) on that specific bet.</li>
+      <li><b>Expected Value Calculator</b> — enter your own honest win probability, the odds offered, and your stake to see whether a bet is mathematically +EV or -EV for you.</li>
+      <li><b>Accumulator Trap Analyzer</b> — real-world worked examples of why accumulators lose money over time, mathematically.</li>
+      <li><b>Long-Term Loss Simulator</b> — model your own betting habits (daily stake, average odds, win rate, timeframe) against what that same money would do in savings or investment instead.</li>
+      <li><b>Honest Bet Tracker</b> — log your real bets and get a reality-check on your actual results, not the results you remember.</li>
+    </ul>
+    <div class="caveat-box">⚠ BetTruth is a financial literacy tool. We do not promote, facilitate, or endorse gambling. Every calculation here is for educational purposes — use it to understand the real odds before you bet anywhere, not as a signal to bet more.</div>
+  </div>
+
+  <div class="footer-note">// GENESIS GROUP © 2026 — VAULTMARKETS — FOR EDUCATIONAL PURPOSES — BET RESPONSIBLY</div>
+</div>
+
+</body>
+</html>
