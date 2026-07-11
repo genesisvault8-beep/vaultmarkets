@@ -569,17 +569,6 @@ nav {
     <div class="page-desc">Enter your last 5 rounds — get your target multiplier instantly</div>
   </div>
 
-  <!-- LIVE MULTIPLIER -->
-  <div class="live-display">
-    <div class="live-label">// LIVE SESSION MULTIPLIER</div>
-    <div class="live-mult" id="liveMult">1.00</div>
-    <div class="live-mult-x">MULTIPLIER</div>
-    <div class="live-status">
-      <div class="live-dot"></div>
-      <div class="live-status-text" id="liveStatusText">SESSION ACTIVE</div>
-    </div>
-  </div>
-
   <!-- INPUT SECTION -->
   <div class="input-section">
     <div class="section-title">// ENTER LAST 5 ROUNDS</div>
@@ -735,51 +724,6 @@ nav {
 </div>
 
 <script>
-// ── LIVE MULTIPLIER ANIMATION ──
-let liveM = 1.00;
-let liveTarget = +(2 + Math.random() * 6).toFixed(2);
-let livePhase = 'flying';
-let liveSpeed = 0.03;
-
-function animateLive() {
-  const el = document.getElementById('liveMult');
-  const st = document.getElementById('liveStatusText');
-
-  if (livePhase === 'flying') {
-    liveSpeed = Math.min(liveSpeed * 1.002, 0.15);
-    liveM = +(liveM + liveSpeed).toFixed(2);
-    el.textContent = liveM.toFixed(2);
-
-    if (liveM < 2) {
-      el.style.color = 'var(--green)';
-      el.style.textShadow = '0 0 40px rgba(0,255,136,0.3)';
-    } else if (liveM < 5) {
-      el.style.color = 'var(--yellow)';
-      el.style.textShadow = '0 0 40px rgba(255,230,0,0.3)';
-    } else {
-      el.style.color = 'var(--red)';
-      el.style.textShadow = '0 0 40px rgba(255,51,85,0.3)';
-    }
-
-    if (liveM >= liveTarget) {
-      livePhase = 'crashed';
-      el.style.color = 'var(--red)';
-      st.textContent = '// CRASHED AT ' + liveTarget.toFixed(2) + 'x';
-      st.style.color = 'var(--red)';
-      setTimeout(() => {
-        liveM = 1.00;
-        liveSpeed = 0.03;
-        liveTarget = +(1.2 + Math.random() * 8).toFixed(2);
-        livePhase = 'flying';
-        el.style.color = 'var(--green)';
-        st.textContent = 'SESSION ACTIVE';
-        st.style.color = 'var(--green)';
-      }, 2200);
-    }
-  }
-}
-setInterval(animateLive, 100);
-
 // ── ROUND INPUT HANDLING ──
 const inputs = ['r1','r2','r3','r4','r5'];
 let sessionHistory = [];
@@ -853,102 +797,58 @@ function updateChart() {
   }).join('');
 }
 
-// ── ANALYSIS ENGINE ──
-function analyze() {
+// ── ANALYSIS ENGINE (AI-powered) ──
+async function analyze() {
   const rounds = getRounds();
   if (rounds.length < 3) return;
 
-  const avg = rounds.reduce((a, b) => a + b, 0) / rounds.length;
-  const last = rounds[rounds.length - 1];
-  const sorted = [...rounds].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  const max = Math.max(...rounds);
-  const min = Math.min(...rounds);
-  const range = max - min;
-  const recent = rounds.slice(-2);
-  const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const btn = document.getElementById('analyzeBtn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '// ANALYZING...';
 
-  // Trend detection
-  let trendUp = 0;
-  for (let i = 1; i < rounds.length; i++) {
-    if (rounds[i] > rounds[i-1]) trendUp++;
-    else trendUp--;
+  try {
+    const res = await fetch('https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/aviator-signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rounds })
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.signal) {
+      throw new Error(data.error || 'AI analysis failed');
+    }
+
+    const { action, target, confidence, trend, volatility, advice } = data.signal;
+    const actionClassMap = { 'HOLD HIGHER': 'action-hold', 'CASH EARLY': 'action-early', 'PLAY SAFE': 'action-safe' };
+    const confClassMap = { 'HIGH CONFIDENCE': 'conf-high', 'MID CONFIDENCE': 'conf-mid', 'LOW CONFIDENCE': 'conf-low' };
+    const trendColor = { 'UP': 'green', 'DOWN': 'red', 'FLAT': 'yellow' };
+    const volColor = { 'LOW': 'green', 'MID': 'yellow', 'HIGH': 'red' };
+
+    document.getElementById('signalOutput').classList.add('show');
+    document.getElementById('signalAction').textContent = action;
+    document.getElementById('signalAction').className = 'signal-action ' + (actionClassMap[action] || 'action-safe');
+    document.getElementById('signalTarget').textContent = target + 'x';
+    document.getElementById('confBadge').textContent = confidence;
+    document.getElementById('confBadge').className = 'confidence-badge ' + (confClassMap[confidence] || 'conf-mid');
+    document.getElementById('statAvg').textContent = (rounds.reduce((a,b)=>a+b,0)/rounds.length).toFixed(2) + 'x';
+    document.getElementById('statAvg').className = 'stat-box-val ' + (volColor[volatility] || 'yellow');
+    document.getElementById('statTrend').textContent = trend === 'UP' ? '↑ UP' : trend === 'DOWN' ? '↓ DOWN' : '→ FLAT';
+    document.getElementById('statTrend').className = 'stat-box-val ' + (trendColor[trend] || 'yellow');
+    document.getElementById('statVol').textContent = volatility;
+    document.getElementById('statVol').className = 'stat-box-val ' + (volColor[volatility] || 'yellow');
+    document.getElementById('signalAdvice').textContent = advice;
+
+    addHistory(rounds, action, target);
+    document.getElementById('signalOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (e) {
+    alert('// AI ANALYSIS UNAVAILABLE — TRY AGAIN IN A MOMENT');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
   }
-
-  // Volatility
-  const variance = rounds.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / rounds.length;
-  const stdDev = Math.sqrt(variance);
-  const volLabel = stdDev < 1 ? 'LOW' : stdDev < 2.5 ? 'MID' : 'HIGH';
-  const volClass = stdDev < 1 ? 'green' : stdDev < 2.5 ? 'yellow' : 'red';
-
-  // Signal logic
-  let action, actionClass, target, confidence, confClass, advice;
-
-  const lowStreak = rounds.filter(v => v < 2).length;
-  const highStreak = rounds.filter(v => v >= 3).length;
-
-  if (lowStreak >= 3) {
-    // Many lows — possible rebound
-    action = 'HOLD HIGHER';
-    actionClass = 'action-hold';
-    target = +(avg * 1.8 + 0.5 + Math.random() * 0.5).toFixed(2);
-    confidence = 'HIGH CONFIDENCE';
-    confClass = 'conf-high';
-    advice = `// PATTERN: ${lowStreak} LOW rounds detected. Rebound probability elevated. Suggested target: ${target}x. Consider entering early and holding firm.`;
-  } else if (highStreak >= 3) {
-    // Many highs — possible correction
-    action = 'CASH EARLY';
-    actionClass = 'action-early';
-    target = +(1.5 + Math.random() * 0.8).toFixed(2);
-    confidence = 'MID CONFIDENCE';
-    confClass = 'conf-mid';
-    advice = `// PATTERN: ${highStreak} HIGH rounds detected. Correction likely incoming. Recommended: cash out early around ${target}x. Protect your bankroll.`;
-  } else if (trendUp > 0 && recentAvg > avg) {
-    // Upward momentum
-    action = 'HOLD HIGHER';
-    actionClass = 'action-hold';
-    target = +(avg * 1.5 + Math.random() * 0.8).toFixed(2);
-    confidence = 'MID CONFIDENCE';
-    confClass = 'conf-mid';
-    advice = `// PATTERN: Upward momentum detected. Recent rounds averaging ${recentAvg.toFixed(2)}x. Target ${target}x with stop-loss at 1.5x.`;
-  } else if (stdDev > 2.5) {
-    // High volatility — play safe
-    action = 'PLAY SAFE';
-    actionClass = 'action-safe';
-    target = +(1.5 + Math.random() * 0.5).toFixed(2);
-    confidence = 'LOW CONFIDENCE';
-    confClass = 'conf-low';
-    advice = `// PATTERN: High volatility session (±${stdDev.toFixed(2)}). Pattern unstable. Recommended: play safe, take small wins at ${target}x. Wait for pattern to stabilize.`;
-  } else {
-    // Neutral
-    action = 'PLAY SAFE';
-    actionClass = 'action-safe';
-    target = +(avg * 1.2 + Math.random() * 0.3).toFixed(2);
-    confidence = 'MID CONFIDENCE';
-    confClass = 'conf-mid';
-    advice = `// PATTERN: Neutral session. Average ${avg.toFixed(2)}x. No strong signal detected. Suggested: conservative exit at ${target}x. Monitor next 2 rounds.`;
-  }
-
-  // Render signal
-  document.getElementById('signalOutput').classList.add('show');
-  document.getElementById('signalAction').textContent = action;
-  document.getElementById('signalAction').className = 'signal-action ' + actionClass;
-  document.getElementById('signalTarget').textContent = target + 'x';
-  document.getElementById('confBadge').textContent = confidence;
-  document.getElementById('confBadge').className = 'confidence-badge ' + confClass;
-  document.getElementById('statAvg').textContent = avg.toFixed(2) + 'x';
-  document.getElementById('statAvg').className = 'stat-box-val ' + (avg >= 3 ? 'green' : avg >= 1.8 ? 'yellow' : 'red');
-  document.getElementById('statTrend').textContent = trendUp > 0 ? '↑ UP' : trendUp < 0 ? '↓ DOWN' : '→ FLAT';
-  document.getElementById('statTrend').className = 'stat-box-val ' + (trendUp > 0 ? 'green' : trendUp < 0 ? 'red' : 'yellow');
-  document.getElementById('statVol').textContent = volLabel;
-  document.getElementById('statVol').className = 'stat-box-val ' + volClass;
-  document.getElementById('signalAdvice').textContent = advice;
-
-  // Add to history
-  addHistory(rounds, action, target);
-
-  // Scroll to signal
-  document.getElementById('signalOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ── HISTORY ──
