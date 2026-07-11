@@ -267,6 +267,21 @@ body::before {
   font-family: 'Share Tech Mono', monospace;
 }
 .plan.featured .plan-price { color: var(--cyan); }
+.plan-approx {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 4px;
+  min-height: 1em;
+}
+.fx-note {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 12px;
+  opacity: 0.7;
+}
 
 .footer-note {
   font-family: 'Share Tech Mono', monospace;
@@ -312,21 +327,26 @@ body::before {
     <div class="plans">
       <div class="plan">
         <div class="plan-name">STARTER</div>
-        <div class="plan-price">₦5,000<span>/7d</span></div>
+        <div class="plan-price" data-ngn="5000">₦5,000<span>/7d</span></div>
+        <div class="plan-approx" data-ngn="5000"></div>
       </div>
       <div class="plan featured">
         <div class="plan-name">MONTHLY</div>
-        <div class="plan-price">₦15,000<span>/mo</span></div>
+        <div class="plan-price" data-ngn="15000">₦15,000<span>/mo</span></div>
+        <div class="plan-approx" data-ngn="15000"></div>
       </div>
       <div class="plan">
         <div class="plan-name">PRO</div>
-        <div class="plan-price">₦35,000<span>/3mo</span></div>
+        <div class="plan-price" data-ngn="35000">₦35,000<span>/3mo</span></div>
+        <div class="plan-approx" data-ngn="35000"></div>
       </div>
       <div class="plan">
         <div class="plan-name">ELITE</div>
-        <div class="plan-price">₦60,000<span>/6mo</span></div>
+        <div class="plan-price" data-ngn="60000">₦60,000<span>/6mo</span></div>
+        <div class="plan-approx" data-ngn="60000"></div>
       </div>
     </div>
+    <div class="fx-note" id="fxNote" style="display:none;"></div>
 
     <div class="step">
       <div class="step-num">1</div>
@@ -343,6 +363,10 @@ body::before {
     <div class="step">
       <div class="step-num">4</div>
       <div class="step-text">Enter code above to unlock <strong>all 8 tools</strong></div>
+    </div>
+
+    <div class="step-text" style="margin-top:16px; opacity:0.85;">
+      // We accept payment in any currency — chat us on <strong><a href="https://wa.me/23273895983" target="_blank">WhatsApp</a></strong> to check if your payment method is available.
     </div>
   </div>
 
@@ -454,6 +478,39 @@ window.addEventListener('DOMContentLoaded', () => {
     window.location.href = getRedirectTarget();
   }
 });
+
+// Auto-detect visitor location and show approx price in their local currency
+(async function showLocalCurrency() {
+  try {
+    const geoRes = await fetch('https://ipapi.co/json/');
+    if (!geoRes.ok) throw new Error('geo lookup failed');
+    const geo = await geoRes.json();
+    const countryCode = geo.country_code;
+    const currency = geo.currency;
+
+    // Nigeria and Sierra Leone: NGN price is already the local/reference price, no conversion needed
+    if (!currency || countryCode === 'NG' || currency === 'NGN') return;
+
+    const fxRes = await fetch('https://open.er-api.com/v6/latest/NGN');
+    if (!fxRes.ok) throw new Error('fx lookup failed');
+    const fx = await fxRes.json();
+    const rate = fx.rates && fx.rates[currency];
+    if (!rate) return;
+
+    document.querySelectorAll('.plan-approx').forEach(el => {
+      const ngn = parseFloat(el.getAttribute('data-ngn'));
+      const converted = ngn * rate;
+      const formatted = converted.toLocaleString(undefined, { maximumFractionDigits: converted < 100 ? 2 : 0 });
+      el.textContent = `≈ ${formatted} ${currency}`;
+    });
+
+    const fxNote = document.getElementById('fxNote');
+    fxNote.textContent = '// Prices shown in ' + currency + ' are approximate — final amount confirmed on WhatsApp';
+    fxNote.style.display = 'block';
+  } catch (e) {
+    // Silently fail — NGN price still displays correctly, WhatsApp confirms actual payment options
+  }
+})();
 </script>
 </body>
 </html>
