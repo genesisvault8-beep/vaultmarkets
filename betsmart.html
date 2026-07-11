@@ -1,7 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>(function(){var ok=localStorage.getItem("vm_access")==="true";if(!ok){var d=encodeURIComponent(window.location.pathname.split("/").pop());window.location.replace("vaultmarkets-access.html?redirect="+d);}})()</script>
+<script>(function(){
+  var ok = localStorage.getItem("vm_access") === "true";
+  var exp = parseInt(localStorage.getItem("vm_expires_at"));
+  var expired = exp && Date.now() > exp * 1000;
+  if (!ok || expired) {
+    localStorage.removeItem("vm_access");
+    localStorage.removeItem("vm_code");
+    localStorage.removeItem("vm_plan");
+    localStorage.removeItem("vm_access_time");
+    localStorage.removeItem("vm_expires_at");
+    var d = encodeURIComponent(window.location.pathname.split("/").pop());
+    window.location.replace("vaultmarkets-access.html?redirect=" + d);
+  }
+})()</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BetSmart — Bankroll Tracker</title>
@@ -1314,6 +1328,45 @@ selectOutcome('win');
 // Redraw chart on resize
 window.addEventListener('resize', () => {
   if (state.started) renderChart();
+});
+</script>
+<script>
+// ── SESSION RE-VALIDATION (catches revoked codes + spoofed local expiry) ──
+const VM_BACKEND_URL = 'https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/validate';
+
+async function revalidateSession() {
+  const code = localStorage.getItem('vm_code');
+  if (!code) return;
+
+  try {
+    const res = await fetch(VM_BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+
+    if (!data.valid) {
+      localStorage.removeItem('vm_access');
+      localStorage.removeItem('vm_code');
+      localStorage.removeItem('vm_plan');
+      localStorage.removeItem('vm_access_time');
+      localStorage.removeItem('vm_expires_at');
+      window.location.href = 'vaultmarkets-access.html';
+      return;
+    }
+
+    if (data.expires_at) {
+      localStorage.setItem('vm_expires_at', data.expires_at.toString());
+    }
+  } catch (e) {
+    // Network hiccup — don't kick the user out over a failed fetch, just skip this cycle
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  revalidateSession();
+  setInterval(revalidateSession, 15 * 60 * 1000); // re-check with backend every 15 min
 });
 </script>
 </body>
