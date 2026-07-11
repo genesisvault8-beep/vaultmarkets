@@ -1128,7 +1128,7 @@ async function buildLiveGames() {
         <td><div class="odds-match">${d.match || ''}</div></td>
         <td><div class="odds-time">${d.time || ''}</div></td>
         <td><div class="odds-val">${typeof d.odds === 'number' ? d.odds.toFixed(2) : (d.odds || '-')}</div></td>
-        <td><div class="odds-badge badge-value">${d.label || ''}</div></td>
+        <td><div class="odds-badge ${d.badge || 'badge-value'}">${d.label || ''}</div></td>
       </tr>
     `).join('');
   } catch (e) {
