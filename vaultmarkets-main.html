@@ -876,6 +876,19 @@ nav {
     <a href="#predictions-section" class="pulse-cta" onclick="document.getElementById('predictions-section').scrollIntoView({behavior:'smooth'})">VIEW ALL PICKS ↓</a>
   </div>
 
+  <!-- LIVE API GAMES -->
+  <div class="section-label" id="live-games-section">// LIVE GAMES</div>
+  <div class="odds-section">
+    <div class="odds-header">
+      <div class="odds-title">// FROM THE ODDS FEED</div>
+      <div class="odds-status">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+    <table class="odds-table" id="liveGamesTable"></table>
+  </div>
+
   <!-- MANUAL PREDICTIONS -->
   <div class="section-label" id="predictions-section">// EXPERT PREDICTIONS</div>
   <div class="odds-section">
@@ -981,6 +994,7 @@ window.addEventListener('DOMContentLoaded', () => {
   (async () => {
     await buildTicker();
     await buildMarketPulse();
+    await buildLiveGames();
     await buildPredictions('football');
   })();
 
@@ -1092,6 +1106,35 @@ const tickerData = [
   {sport:'⚽ LALIGA', match:'Real Madrid vs Sevilla', odds:'1.55', badge:'— FAIR'},
   {sport:'🏀 NBA', match:'Bucks vs Heat', odds:'2.05', badge:'⚡ VALUE'},
 ];
+
+// ── LIVE GAMES (raw feed from The Odds API, via live-odds endpoint) ──
+async function buildLiveGames() {
+  const table = document.getElementById('liveGamesTable');
+  table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// LOADING LIVE GAMES...</td></tr>`;
+
+  try {
+    const res = await fetch('https://genesis-ai-backend-wheat.vercel.app/vaultmarkets/live-odds');
+    const data = await res.json();
+    const games = data.odds || [];
+
+    if (!games.length) {
+      table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// NO LIVE GAMES RIGHT NOW</td></tr>`;
+      return;
+    }
+
+    table.innerHTML = games.map(d => `
+      <tr class="odds-row">
+        <td><div class="odds-league">${d.league || ''}</div></td>
+        <td><div class="odds-match">${d.match || ''}</div></td>
+        <td><div class="odds-time">${d.time || ''}</div></td>
+        <td><div class="odds-val">${typeof d.odds === 'number' ? d.odds.toFixed(2) : (d.odds || '-')}</div></td>
+        <td><div class="odds-badge badge-value">${d.label || ''}</div></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    table.innerHTML = `<tr><td style="padding:16px; opacity:0.5; font-family:monospace; font-size:11px;">// FAILED TO LOAD LIVE GAMES</td></tr>`;
+  }
+}
 
 async function buildTicker() {
   try {
